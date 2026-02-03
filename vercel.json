@@ -1,18 +1,13 @@
 {
-    "version": 2,
-    "builds": [
-        {
-            "src": "api/mobilox-import.js",
-            "use": "@vercel/node",
-            "config": {
-                "maxDuration": 10
-            }
-        }
-    ],
     "rewrites": [
         {
-            "source": "/(.*)",
+            "source": "/((?!api/).*)",
             "destination": "/index.html"
         }
-    ]
+    ],
+    "functions": {
+        "api/mobilox-import.js": {
+            "maxDuration": 10
+        }
+    }
 }
