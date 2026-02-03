@@ -101,8 +101,10 @@ const Collection: React.FC = () => {
 
                 <div
                     ref={scrollRef}
-                    className="w-full overflow-x-auto no-scrollbar pb-10 snap-x snap-mandatory scroll-smooth pl-6 pr-6 md:pl-[max(1.5rem,calc((100vw-1400px)/2+1.5rem))] md:pr-[max(1.5rem,calc((100vw-1400px)/2+1.5rem))]"
+                    className="w-full overflow-x-auto no-scrollbar pb-10 snap-x snap-mandatory scroll-smooth"
                     style={{
+                        paddingLeft: 'max(1.5rem, calc((100vw - 1400px) / 2 + 1.5rem))',
+                        paddingRight: 'max(1.5rem, calc((100vw - 1400px) / 2 + 1.5rem))',
                         scrollPaddingLeft: 'max(1.5rem, calc((100vw - 1400px) / 2 + 1.5rem))'
                     }}
                 >
