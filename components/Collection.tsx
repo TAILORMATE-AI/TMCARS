@@ -31,11 +31,11 @@ const Collection: React.FC = () => {
     const inStockCars = cars.filter(car => !car.is_archived);
     const stockCount = inStockCars.length;
 
-    // Start slider at the right side (scroll to end on mount)
+    // Start slider at the right position (one step left from far right)
     useEffect(() => {
         if (scrollRef.current) {
-            // Scroll to the far right
-            scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+            // Scroll to far right minus one card width (460px) - exactly like pressing left arrow once
+            scrollRef.current.scrollLeft = scrollRef.current.scrollWidth - scrollRef.current.clientWidth - 460;
         }
     }, [inStockCars]);
 
