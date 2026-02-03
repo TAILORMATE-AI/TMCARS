@@ -189,14 +189,44 @@ export default async function handler(req, res) {
       // Year
       const year = parseInt(data.bouwjaar) || 0;
 
-      // Images - handle <afbeeldingen><afbeelding url="..."/></afbeeldingen>
+      // Images - handle multiple XML structures
+      // Structure 1: <afbeeldingen><afbeelding url="..."/></afbeeldingen>
+      // Structure 2: <afbeeldingen><afbeelding>URL</afbeelding></afbeeldingen>
+      // Structure 3: <foto's><foto url="..."/></foto's>
       let imageUrls = '';
+      console.log('=== IMAGE EXTRACTION DEBUG ===');
+      console.log('data.afbeeldingen:', JSON.stringify(data.afbeeldingen));
+      console.log('data.fotos:', JSON.stringify(data.fotos));
+
+      // Try afbeeldingen first
       if (data.afbeeldingen && data.afbeeldingen.afbeelding) {
         const imgs = Array.isArray(data.afbeeldingen.afbeelding)
           ? data.afbeeldingen.afbeelding
           : [data.afbeeldingen.afbeelding];
 
-        // Extract URLs from attributes or text content
+        console.log('Found afbeelding elements:', imgs.length);
+        console.log('First image raw:', JSON.stringify(imgs[0]));
+
+        imageUrls = imgs
+          .map(img => {
+            if (typeof img === 'string') return img;
+            // Try different attribute names
+            if (img['@_url']) return img['@_url'];
+            if (img['@_URL']) return img['@_URL'];
+            if (img['#text']) return img['#text'];
+            if (img.url) return getTextValue(img.url);
+            return null;
+          })
+          .filter(Boolean)
+          .join(',');
+      }
+
+      // Try fotos if afbeeldingen didn't work
+      if (!imageUrls && data.fotos && data.fotos.foto) {
+        const imgs = Array.isArray(data.fotos.foto)
+          ? data.fotos.foto
+          : [data.fotos.foto];
+
         imageUrls = imgs
           .map(img => {
             if (typeof img === 'string') return img;
@@ -207,7 +237,8 @@ export default async function handler(req, res) {
           .filter(Boolean)
           .join(',');
       }
-      console.log('Image URLs count:', imageUrls ? imageUrls.split(',').length : 0);
+      console.log('Final image URLs:', imageUrls);
+      console.log('Image count:', imageUrls ? imageUrls.split(',').length : 0);
 
       // Categories Logic (Auto-tagging)
       const categories = [];
@@ -229,22 +260,70 @@ export default async function handler(req, res) {
       // Mark as "Recent" if newer than 2 years
       if (year >= new Date().getFullYear() - 2) categories.push('Recent');
 
-      // Extract accessories/options from accessoires element
+      // Extract accessories/options - handle multiple XML structures
+      console.log('=== OPTIONS EXTRACTION DEBUG ===');
+      console.log('data.accessoires:', JSON.stringify(data.accessoires));
+
       let options = [];
-      if (data.accessoires && data.accessoires.accessoire) {
-        const accs = Array.isArray(data.accessoires.accessoire)
-          ? data.accessoires.accessoire
-          : [data.accessoires.accessoire];
+      if (data.accessoires) {
+        // Structure 1: <accessoires><accessoire><naam>...</naam></accessoire></accessoires>
+        // Structure 2: <accessoires><accessoire>Name</accessoire></accessoires>
+        // Structure 3: <accessoires><standaard><accessoire>...</accessoire></standaard><optioneel>...</optioneel></accessoires>
+
+        let accs = [];
+
+        // Check for direct accessoire elements
+        if (data.accessoires.accessoire) {
+          accs = Array.isArray(data.accessoires.accessoire)
+            ? data.accessoires.accessoire
+            : [data.accessoires.accessoire];
+        }
+
+        // Also check for standaard/optioneel categories
+        if (data.accessoires.standaard && data.accessoires.standaard.accessoire) {
+          const standaard = Array.isArray(data.accessoires.standaard.accessoire)
+            ? data.accessoires.standaard.accessoire
+            : [data.accessoires.standaard.accessoire];
+          accs = [...accs, ...standaard];
+        }
+
+        if (data.accessoires.optioneel && data.accessoires.optioneel.accessoire) {
+          const optioneel = Array.isArray(data.accessoires.optioneel.accessoire)
+            ? data.accessoires.optioneel.accessoire
+            : [data.accessoires.optioneel.accessoire];
+          accs = [...accs, ...optioneel];
+        }
+
+        console.log('Found accessoire elements:', accs.length);
+        if (accs.length > 0) console.log('First accessoire raw:', JSON.stringify(accs[0]));
 
         options = accs
           .map(acc => {
             if (typeof acc === 'string') return acc;
             if (acc.naam) return getTextValue(acc.naam);
+            if (acc['#text']) return acc['#text'];
             return null;
           })
           .filter(Boolean);
       }
-      console.log('Options count:', options.length);
+      console.log('Options extracted:', options.length, options.slice(0, 5));
+
+      // Debug color fields
+      console.log('=== COLOR EXTRACTION DEBUG ===');
+      console.log('data.basiskleur:', JSON.stringify(data.basiskleur));
+      console.log('data.kleur:', JSON.stringify(data.kleur));
+      console.log('data.laksoort:', JSON.stringify(data.laksoort));
+      console.log('data.basisinterieurkleur:', JSON.stringify(data.basisinterieurkleur));
+      console.log('data.interieurkleur:', JSON.stringify(data.interieurkleur));
+      console.log('data.bekleding:', JSON.stringify(data.bekleding));
+
+      // Extract colors with fallbacks
+      const exteriorColor = getTextValue(data.basiskleur) || getTextValue(data.kleur) || null;
+      const interiorColor = getTextValue(data.basisinterieurkleur) || getTextValue(data.interieurkleur) || null;
+
+      console.log('Extracted exterior color:', exteriorColor);
+      console.log('Extracted interior color:', interiorColor);
+
 
       // Build vehicle data object with ALL specifications from XML
       const vehicleData = {
@@ -266,11 +345,11 @@ export default async function handler(req, res) {
         doors: parseInt(getTextValue(data.aantal_deuren)) || null,
         seats: parseInt(getTextValue(data.aantal_zitplaatsen)) || null,
         // Exterior
-        color: getTextValue(data.basiskleur) || null,
+        color: exteriorColor,
         color_code: getTextValue(data.kleurcode) || null,
         paint_type: getTextValue(data.laksoort) || null,
         // Interior  
-        interior_color: getTextValue(data.basisinterieurkleur) || getTextValue(data.interieurkleur) || null,
+        interior_color: interiorColor,
         upholstery: getTextValue(data.bekleding) || null,
         // Engine & Drivetrain
         fuel_type: fuel || null,
