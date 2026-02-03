@@ -5,11 +5,12 @@ import { Car } from '../types.ts';
 // ------------------------------------------------------------------
 // SUPABASE CONFIGURATION
 // ------------------------------------------------------------------
-const SUPABASE_URL = "https://zabrdslxbnfhcnqxbvzz.supabase.co";
-// NOTE: Ideally, this Service Role Key should be backend-only. 
-// For this implementation, we use it here to enable Admin features 
-// (Write/Delete) without a full Auth system setup.
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphYnJkc2x4Ym5maGNucXhidnp6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTcyMTM0NCwiZXhwIjoyMDg1Mjk3MzQ0fQ.Fvg7g3d8dl6fZDNgh69hGFTSAn9U5zxdoU85qEBFL_A";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  console.error("Missing Supabase Environment Variables");
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -32,7 +33,7 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // ----------------------------------------------------------------
   const mapDbToCar = (record: any): Car => {
     const images = record.image_urls ? record.image_urls.split(',') : [];
-    
+
     // Safety check for price/mileage in case DB has nulls
     const priceVal = Number(record.price) || 0;
     const mileageVal = Number(record.mileage) || 0;
@@ -50,9 +51,9 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       image: images[0] || '', // Use first image as main
       images: images,
       // Map rich data fields
-      categories: record.categories || [], 
-      bodyType: record.body_type || 'Overig', 
-      options: record.options || [], 
+      categories: record.categories || [],
+      bodyType: record.body_type || 'Overig',
+      options: record.options || [],
       featured: (record.categories || []).includes('Recent'),
       expertTip: '', // Expert tip is usually manual content, default empty
       is_archived: record.status === 'archived',
@@ -94,7 +95,7 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addCar = async (car: Omit<Car, 'id'>) => {
     // We generate a random hexon_nr for manually added cars to satisfy Unique constraint
-    const fakeHexonNr = Math.floor(Math.random() * 10000000); 
+    const fakeHexonNr = Math.floor(Math.random() * 10000000);
     const mileageInt = parseInt(car.mileage.replace(/\D/g, '')) || 0;
     const imageString = car.images ? car.images.join(',') : car.image;
 
@@ -115,7 +116,7 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     const { error } = await supabase.from('vehicles').insert(dbPayload);
-    
+
     if (error) {
       console.error("Error adding car:", error);
       alert("Er is een fout opgetreden bij het opslaan.");
@@ -127,7 +128,7 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateCar = async (updatedCar: Car) => {
     const mileageInt = parseInt(updatedCar.mileage.replace(/\D/g, '')) || 0;
     const imageString = updatedCar.images ? updatedCar.images.join(',') : updatedCar.image;
-    
+
     // Determine status string based on flags
     let status = 'active';
     if (updatedCar.is_sold) status = 'sold';
@@ -178,7 +179,7 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!car) return;
 
     const newStatus = !car.is_archived ? 'archived' : 'active';
-    
+
     const { error } = await supabase
       .from('vehicles')
       .update({ status: newStatus })
@@ -202,8 +203,8 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       .eq('id', id);
 
     if (!error) {
-       // Optimistic update
-       setCars(prev => prev.map(c => c.id === id ? { ...c, is_sold: !c.is_sold } : c));
+      // Optimistic update
+      setCars(prev => prev.map(c => c.id === id ? { ...c, is_sold: !c.is_sold } : c));
     }
   };
 
