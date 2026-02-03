@@ -93,10 +93,7 @@ const Collection: React.FC = () => {
 
             {/* Slider Container with Zero-Flicker Alignment */}
             <div className="relative w-full">
-                {/* Left Fade Gradient */}
-                <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#020202] to-transparent z-20 pointer-events-none" />
-
-                {/* Right Fade Gradient */}
+                {/* Right Fade Gradient only - left side aligns with header */}
                 <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#020202] to-transparent z-20 pointer-events-none" />
 
                 <div
