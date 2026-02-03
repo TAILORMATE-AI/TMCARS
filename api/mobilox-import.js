@@ -149,18 +149,28 @@ export default async function handler(req, res) {
 
         for (const field of priceFields) {
           if (field && field.prijzen) {
-            // Handle <prijzen><prijs><bedrag>...</bedrag></prijs></prijzen>
-            const prijzen = field.prijzen;
-            if (prijzen.prijs) {
-              const prijs = Array.isArray(prijzen.prijs) ? prijzen.prijs[0] : prijzen.prijs;
+            let prijzen = field.prijzen;
+
+            // Handle array of prijzen (multiple countries)
+            if (Array.isArray(prijzen)) {
+              prijzen = prijzen[0];
+            }
+
+            // Navigate to prijs element
+            if (prijzen && prijzen.prijs) {
+              let prijs = prijzen.prijs;
+              // Handle array of prijs elements
+              if (Array.isArray(prijs)) {
+                prijs = prijs[0];
+              }
+
               if (prijs && prijs.bedrag) {
                 const bedrag = getTextValue(prijs.bedrag);
+                console.log('Found bedrag:', bedrag);
                 if (bedrag) {
                   return parseFloat(bedrag.toString().replace(/\./g, '').replace(',', '.')) || 0;
                 }
               }
-            } else if (typeof prijzen === 'string' || typeof prijzen === 'number') {
-              return parseFloat(prijzen.toString().replace(/\./g, '').replace(',', '.')) || 0;
             }
           }
         }
@@ -170,7 +180,8 @@ export default async function handler(req, res) {
       const price = getPrice();
       console.log('Extracted price:', price);
 
-      // Parse mileage safely (handles <tellerstand eenheid="K"></tellerstand>)
+      // Parse mileage safely (handles <tellerstand eenheid="K">125000</tellerstand>)
+      console.log('Raw tellerstand data:', JSON.stringify(data.tellerstand));
       const mileageRaw = getTextValue(data.tellerstand);
       const mileage = mileageRaw ? parseInt(mileageRaw) : 0;
       console.log('Extracted mileage:', mileage);
@@ -235,8 +246,17 @@ export default async function handler(req, res) {
       }
       console.log('Options count:', options.length);
 
-      // Build vehicle data object - only include fields that exist in database
-      // Verified columns: hexon_nr, make, model, price, year, mileage, fuel_type, transmission, image_urls, status
+      // Extract additional specifications
+      const horsepower = parseInt(getTextValue(data.vermogen_motor_pk)) || null;
+      const engineCc = parseInt(getTextValue(data.cilinder_inhoud)) || null;
+      const doors = parseInt(getTextValue(data.aantal_deuren)) || null;
+      const color = getTextValue(data.basiskleur) || null;
+      const licensePlate = getTextValue(data.kenteken) || null;
+
+      // Extract description from opmerkingen (HTML content)
+      const description = getTextValue(data.opmerkingen) || null;
+
+      // Build vehicle data object with ALL specifications
       const vehicleData = {
         hexon_nr: hexonNr,
         make: getTextValue(data.merk) || null,
@@ -247,6 +267,16 @@ export default async function handler(req, res) {
         fuel_type: fuel || null,
         transmission: getTextValue(data.transmissie) || null,
         image_urls: imageUrls,
+        // Additional specifications
+        body_type: bodyType,
+        color: color,
+        horsepower: horsepower,
+        engine_cc: engineCc,
+        doors: doors,
+        license_plate: licensePlate,
+        options: options, // Will be stored as JSONB array
+        categories: categories, // Will be stored as JSONB array
+        description: description,
         status: 'active',
       };
 
