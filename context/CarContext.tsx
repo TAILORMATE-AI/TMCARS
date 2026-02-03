@@ -1,0 +1,223 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { Car } from '../types.ts';
+
+// ------------------------------------------------------------------
+// SUPABASE CONFIGURATION
+// ------------------------------------------------------------------
+const SUPABASE_URL = "https://zabrdslxbnfhcnqxbvzz.supabase.co";
+// NOTE: Ideally, this Service Role Key should be backend-only. 
+// For this implementation, we use it here to enable Admin features 
+// (Write/Delete) without a full Auth system setup.
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphYnJkc2x4Ym5maGNucXhidnp6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTcyMTM0NCwiZXhwIjoyMDg1Mjk3MzQ0fQ.Fvg7g3d8dl6fZDNgh69hGFTSAn9U5zxdoU85qEBFL_A";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+interface CarContextType {
+  cars: Car[];
+  addCar: (car: Omit<Car, 'id'>) => Promise<void>;
+  updateCar: (car: Car) => Promise<void>;
+  deleteCar: (id: number) => Promise<void>;
+  toggleArchive: (id: number) => Promise<void>;
+  toggleSold: (id: number) => Promise<void>;
+}
+
+const CarContext = createContext<CarContextType | undefined>(undefined);
+
+export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [cars, setCars] = useState<Car[]>([]);
+
+  // ----------------------------------------------------------------
+  // 1. DATA MAPPING (DB -> FRONTEND)
+  // ----------------------------------------------------------------
+  const mapDbToCar = (record: any): Car => {
+    const images = record.image_urls ? record.image_urls.split(',') : [];
+    
+    // Safety check for price/mileage in case DB has nulls
+    const priceVal = Number(record.price) || 0;
+    const mileageVal = Number(record.mileage) || 0;
+
+    return {
+      id: record.id,
+      make: record.make || 'Onbekend',
+      model: record.model || 'Model',
+      year: record.year || new Date().getFullYear(),
+      price: `€ ${new Intl.NumberFormat('nl-BE').format(priceVal)}`,
+      priceValue: priceVal,
+      mileage: `${new Intl.NumberFormat('nl-BE').format(mileageVal)} km`,
+      transmission: record.transmission || 'Automaat',
+      fuel: record.fuel_type || 'Benzine',
+      image: images[0] || '', // Use first image as main
+      images: images,
+      // Map rich data fields
+      categories: record.categories || [], 
+      bodyType: record.body_type || 'Overig', 
+      options: record.options || [], 
+      featured: (record.categories || []).includes('Recent'),
+      expertTip: '', // Expert tip is usually manual content, default empty
+      is_archived: record.status === 'archived',
+      is_sold: record.status === 'sold'
+    };
+  };
+
+  // ----------------------------------------------------------------
+  // 2. FETCH DATA
+  // ----------------------------------------------------------------
+  const fetchCars = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('vehicles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Supabase fetch error:', error);
+        return;
+      }
+
+      if (data) {
+        setCars(data.map(mapDbToCar));
+      }
+    } catch (err) {
+      console.error('Unexpected error fetching cars:', err);
+    }
+  };
+
+  // Initial Fetch
+  useEffect(() => {
+    fetchCars();
+  }, []);
+
+  // ----------------------------------------------------------------
+  // 3. CRUD OPERATIONS
+  // ----------------------------------------------------------------
+
+  const addCar = async (car: Omit<Car, 'id'>) => {
+    // We generate a random hexon_nr for manually added cars to satisfy Unique constraint
+    const fakeHexonNr = Math.floor(Math.random() * 10000000); 
+    const mileageInt = parseInt(car.mileage.replace(/\D/g, '')) || 0;
+    const imageString = car.images ? car.images.join(',') : car.image;
+
+    const dbPayload = {
+      hexon_nr: fakeHexonNr,
+      make: car.make,
+      model: car.model,
+      price: car.priceValue,
+      year: car.year,
+      mileage: mileageInt,
+      fuel_type: car.fuel,
+      transmission: car.transmission,
+      image_urls: imageString,
+      categories: car.categories,
+      body_type: car.bodyType,
+      options: car.options,
+      status: car.is_archived ? 'archived' : (car.is_sold ? 'sold' : 'active')
+    };
+
+    const { error } = await supabase.from('vehicles').insert(dbPayload);
+    
+    if (error) {
+      console.error("Error adding car:", error);
+      alert("Er is een fout opgetreden bij het opslaan.");
+    } else {
+      fetchCars(); // Refresh list
+    }
+  };
+
+  const updateCar = async (updatedCar: Car) => {
+    const mileageInt = parseInt(updatedCar.mileage.replace(/\D/g, '')) || 0;
+    const imageString = updatedCar.images ? updatedCar.images.join(',') : updatedCar.image;
+    
+    // Determine status string based on flags
+    let status = 'active';
+    if (updatedCar.is_sold) status = 'sold';
+    else if (updatedCar.is_archived) status = 'archived';
+
+    const dbPayload = {
+      make: updatedCar.make,
+      model: updatedCar.model,
+      price: updatedCar.priceValue,
+      year: updatedCar.year,
+      mileage: mileageInt,
+      fuel_type: updatedCar.fuel,
+      transmission: updatedCar.transmission,
+      image_urls: imageString,
+      categories: updatedCar.categories,
+      body_type: updatedCar.bodyType,
+      options: updatedCar.options,
+      status: status
+    };
+
+    const { error } = await supabase
+      .from('vehicles')
+      .update(dbPayload)
+      .eq('id', updatedCar.id);
+
+    if (error) {
+      console.error("Error updating car:", error);
+    } else {
+      fetchCars();
+    }
+  };
+
+  const deleteCar = async (id: number) => {
+    const { error } = await supabase
+      .from('vehicles')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error("Error deleting car:", error);
+    } else {
+      setCars(prev => prev.filter(c => c.id !== id));
+    }
+  };
+
+  const toggleArchive = async (id: number) => {
+    const car = cars.find(c => c.id === id);
+    if (!car) return;
+
+    const newStatus = !car.is_archived ? 'archived' : 'active';
+    
+    const { error } = await supabase
+      .from('vehicles')
+      .update({ status: newStatus })
+      .eq('id', id);
+
+    if (!error) {
+      // Optimistic update
+      setCars(prev => prev.map(c => c.id === id ? { ...c, is_archived: !c.is_archived } : c));
+    }
+  };
+
+  const toggleSold = async (id: number) => {
+    const car = cars.find(c => c.id === id);
+    if (!car) return;
+
+    const newStatus = !car.is_sold ? 'sold' : 'active';
+
+    const { error } = await supabase
+      .from('vehicles')
+      .update({ status: newStatus })
+      .eq('id', id);
+
+    if (!error) {
+       // Optimistic update
+       setCars(prev => prev.map(c => c.id === id ? { ...c, is_sold: !c.is_sold } : c));
+    }
+  };
+
+  return (
+    <CarContext.Provider value={{ cars, addCar, updateCar, deleteCar, toggleArchive, toggleSold }}>
+      {children}
+    </CarContext.Provider>
+  );
+};
+
+export const useCars = () => {
+  const context = useContext(CarContext);
+  if (!context) {
+    throw new Error('useCars must be used within a CarProvider');
+  }
+  return context;
+};

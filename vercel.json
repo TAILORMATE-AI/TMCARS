@@ -1,0 +1,26 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "api/mobilox-import.js",
+            "use": "@vercel/node",
+            "config": {
+                "maxDuration": 10
+            }
+        },
+        {
+            "src": "package.json",
+            "use": "@vercel/vite"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/api/mobilox-import",
+            "dest": "/api/mobilox-import.js"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/index.html"
+        }
+    ]
+}
