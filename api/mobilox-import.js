@@ -246,17 +246,8 @@ export default async function handler(req, res) {
       }
       console.log('Options count:', options.length);
 
-      // Extract additional specifications
-      const horsepower = parseInt(getTextValue(data.vermogen_motor_pk)) || null;
-      const engineCc = parseInt(getTextValue(data.cilinder_inhoud)) || null;
-      const doors = parseInt(getTextValue(data.aantal_deuren)) || null;
-      const color = getTextValue(data.basiskleur) || null;
-      const licensePlate = getTextValue(data.kenteken) || null;
-
-      // Extract description from opmerkingen (HTML content)
-      const description = getTextValue(data.opmerkingen) || null;
-
-      // Build vehicle data object with ALL specifications
+      // Build vehicle data object - only include fields that exist in database
+      // Verified columns: hexon_nr, make, model, price, year, mileage, fuel_type, transmission, image_urls, status
       const vehicleData = {
         hexon_nr: hexonNr,
         make: getTextValue(data.merk) || null,
@@ -267,16 +258,6 @@ export default async function handler(req, res) {
         fuel_type: fuel || null,
         transmission: getTextValue(data.transmissie) || null,
         image_urls: imageUrls,
-        // Additional specifications
-        body_type: bodyType,
-        color: color,
-        horsepower: horsepower,
-        engine_cc: engineCc,
-        doors: doors,
-        license_plate: licensePlate,
-        options: options, // Will be stored as JSONB array
-        categories: categories, // Will be stored as JSONB array
-        description: description,
         status: 'active',
       };
 
