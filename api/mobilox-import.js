@@ -246,8 +246,7 @@ export default async function handler(req, res) {
       }
       console.log('Options count:', options.length);
 
-      // Build vehicle data object - only include fields that exist in database
-      // Verified columns: hexon_nr, make, model, price, year, mileage, fuel_type, transmission, image_urls, status
+      // Build vehicle data object with ALL specifications
       const vehicleData = {
         hexon_nr: hexonNr,
         make: getTextValue(data.merk) || null,
@@ -258,6 +257,16 @@ export default async function handler(req, res) {
         fuel_type: fuel || null,
         transmission: getTextValue(data.transmissie) || null,
         image_urls: imageUrls,
+        // Additional specifications
+        body_type: bodyType,
+        color: getTextValue(data.basiskleur) || null,
+        horsepower: parseInt(getTextValue(data.vermogen_motor_pk)) || null,
+        engine_cc: parseInt(getTextValue(data.cilinder_inhoud)) || null,
+        doors: parseInt(getTextValue(data.aantal_deuren)) || null,
+        license_plate: getTextValue(data.kenteken) || null,
+        options: options,
+        categories: categories,
+        description: getTextValue(data.opmerkingen) || null,
         status: 'active',
       };
 
