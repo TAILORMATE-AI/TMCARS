@@ -375,6 +375,32 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
                       <span className="text-sm font-bold text-white">{car.fuel}</span>
                     </div>
                   </div>
+
+                  {/* Color - NEW */}
+                  {car.color && (
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-white/5 rounded-none border border-white/5">
+                        <div className="w-[18px] h-[18px] rounded-full border border-white/20" style={{ backgroundColor: car.color?.toLowerCase().includes('zwart') ? '#1a1a1a' : car.color?.toLowerCase().includes('wit') ? '#f5f5f5' : car.color?.toLowerCase().includes('grijs') ? '#6b7280' : car.color?.toLowerCase().includes('blauw') ? '#3b82f6' : car.color?.toLowerCase().includes('rood') ? '#ef4444' : car.color?.toLowerCase().includes('groen') ? '#22c55e' : car.color?.toLowerCase().includes('bruin') ? '#92400e' : car.color?.toLowerCase().includes('geel') ? '#eab308' : car.color?.toLowerCase().includes('oranje') ? '#f97316' : '#9ca3af' }} />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] text-gray-500 uppercase tracking-widest">Exterieur</span>
+                        <span className="text-sm font-bold text-white capitalize">{car.color}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Interior Color - NEW */}
+                  {car.interiorColor && (
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-white/5 rounded-none border border-white/5">
+                        <div className="w-[18px] h-[18px] rounded-full border border-white/20" style={{ backgroundColor: car.interiorColor?.toLowerCase().includes('zwart') ? '#1a1a1a' : car.interiorColor?.toLowerCase().includes('beige') ? '#d4c5a9' : car.interiorColor?.toLowerCase().includes('bruin') ? '#92400e' : car.interiorColor?.toLowerCase().includes('grijs') ? '#6b7280' : car.interiorColor?.toLowerCase().includes('wit') ? '#f5f5f5' : '#9ca3af' }} />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] text-gray-500 uppercase tracking-widest">Interieur</span>
+                        <span className="text-sm font-bold text-white capitalize">{car.interiorColor}{car.upholstery ? ` (${car.upholstery})` : ''}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Description / Expert Tip */}
