@@ -236,10 +236,9 @@ export default async function handler(req, res) {
       console.log('Options count:', options.length);
 
       // Build vehicle data object - only include fields that exist in database
-      // Based on CarContext.tsx: hexon_nr, make, model, price, year, mileage, fuel_type, transmission, image_urls, categories, body_type, options, status
+      // Verified columns: hexon_nr, make, model, price, year, mileage, fuel_type, transmission, image_urls, categories, options, status
       const vehicleData = {
         hexon_nr: hexonNr,
-        license_plate: getTextValue(data.kenteken) || null,
         make: getTextValue(data.merk) || null,
         model: getTextValue(data.model) || null,
         price: price,
@@ -248,11 +247,9 @@ export default async function handler(req, res) {
         fuel_type: fuel || null,
         transmission: getTextValue(data.transmissie) || null,
         image_urls: imageUrls,
-        body_type: bodyType,
         categories: categories,
         options: options,
         status: 'active',
-        updated_at: new Date().toISOString(),
       };
 
       console.log('Vehicle data to save:', JSON.stringify(vehicleData, null, 2));
