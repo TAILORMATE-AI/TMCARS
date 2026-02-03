@@ -414,299 +414,141 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
                   </p>
                 </div>
 
-                {/* Technical Specifications - Full Breakdown */}
-                <div className="bg-[#0A0A0A] border border-white/10 p-4 md:p-6 mb-8">
-                  <h3 className="text-xs font-bold text-white uppercase tracking-widest border-b border-white/10 pb-3 mb-4">
+                {/* Technical Specifications - Compact Grid */}
+                <div className="bg-[#0A0A0A] border border-white/10 p-4 mb-6">
+                  <h3 className="text-xs font-bold text-white uppercase tracking-widest border-b border-white/10 pb-3 mb-3">
                     Volledige Specificaties
                   </h3>
 
-                  {/* Variant Info */}
+                  {/* Variant */}
                   {car.variant && (
-                    <div className="mb-4 pb-4 border-b border-white/10">
-                      <span className="text-[10px] text-gray-500 uppercase tracking-wider block mb-1">Uitvoering</span>
-                      <p className="text-white font-medium">{car.variant}</p>
+                    <div className="text-sm text-white mb-3 pb-3 border-b border-white/10">
+                      <span className="text-gray-500 mr-2">Uitvoering:</span>{car.variant}
                     </div>
                   )}
 
-                  {/* Specs Table */}
-                  <div className="space-y-0">
-                    {/* Exterior Section */}
-                    {(car.color || car.bodyType || car.doors) && (
-                      <>
-                        <div className="py-2 border-b border-white/5">
-                          <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Exterieur</span>
-                        </div>
-                        {car.color && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Kleur</span>
-                            <span className="text-white text-sm text-right capitalize">{car.color}</span>
-                          </div>
-                        )}
-                        {car.paintType && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Laksoort</span>
-                            <span className="text-white text-sm text-right capitalize">{car.paintType}</span>
-                          </div>
-                        )}
-                        {car.bodyType && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Carrosserie</span>
-                            <span className="text-white text-sm text-right">{car.bodyType}</span>
-                          </div>
-                        )}
-                        {car.doors && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Deuren</span>
-                            <span className="text-white text-sm text-right">{car.doors}</span>
-                          </div>
-                        )}
-                      </>
+                  {/* Compact 2-Column Specs Grid */}
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
+                    {/* Column 1 */}
+                    {car.color && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">Kleur</span>
+                        <span className="text-white capitalize">{car.color}</span>
+                      </div>
                     )}
-
-                    {/* Interior Section */}
-                    {(car.interiorColor || car.upholstery || car.seats) && (
-                      <>
-                        <div className="py-2 border-b border-white/5 mt-4">
-                          <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Interieur</span>
-                        </div>
-                        {car.interiorColor && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Kleur</span>
-                            <span className="text-white text-sm text-right capitalize">{car.interiorColor}</span>
-                          </div>
-                        )}
-                        {car.upholstery && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Bekleding</span>
-                            <span className="text-white text-sm text-right capitalize">{car.upholstery}</span>
-                          </div>
-                        )}
-                        {car.seats && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Zitplaatsen</span>
-                            <span className="text-white text-sm text-right">{car.seats}</span>
-                          </div>
-                        )}
-                      </>
+                    {car.interiorColor && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">Interieur</span>
+                        <span className="text-white capitalize">{car.interiorColor}</span>
+                      </div>
                     )}
-
-                    {/* Engine Section */}
-                    {(car.horsepower || car.engineCc || car.cylinders || car.gears || car.torque) && (
-                      <>
-                        <div className="py-2 border-b border-white/5 mt-4">
-                          <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Motor & Aandrijving</span>
-                        </div>
-                        {car.horsepower && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Vermogen</span>
-                            <span className="text-white text-sm text-right">{car.horsepower} PK{car.kwPower ? ` (${car.kwPower} kW)` : ''}</span>
-                          </div>
-                        )}
-                        {car.engineCc && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Motorinhoud</span>
-                            <span className="text-white text-sm text-right">{new Intl.NumberFormat('nl-BE').format(car.engineCc)} cc</span>
-                          </div>
-                        )}
-                        {car.cylinders && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Cilinders</span>
-                            <span className="text-white text-sm text-right">{car.cylinders}</span>
-                          </div>
-                        )}
-                        {car.gears && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Versnellingen</span>
-                            <span className="text-white text-sm text-right">{car.gears}</span>
-                          </div>
-                        )}
-                        {car.torque && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Koppel</span>
-                            <span className="text-white text-sm text-right">{car.torque} Nm</span>
-                          </div>
-                        )}
-                      </>
+                    {car.bodyType && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">Carrosserie</span>
+                        <span className="text-white">{car.bodyType}</span>
+                      </div>
                     )}
-
-                    {/* Performance Section */}
-                    {(car.topSpeed || car.acceleration) && (
-                      <>
-                        <div className="py-2 border-b border-white/5 mt-4">
-                          <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Prestaties</span>
-                        </div>
-                        {car.topSpeed && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Topsnelheid</span>
-                            <span className="text-white text-sm text-right">{car.topSpeed} km/u</span>
-                          </div>
-                        )}
-                        {car.acceleration && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">0-100 km/u</span>
-                            <span className="text-white text-sm text-right">{car.acceleration} sec</span>
-                          </div>
-                        )}
-                      </>
+                    {car.upholstery && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">Bekleding</span>
+                        <span className="text-white capitalize">{car.upholstery}</span>
+                      </div>
                     )}
-
-                    {/* Fuel & Emissions Section */}
-                    {(car.fuelCombined || car.fuelCity || car.co2Emission || car.energyLabel) && (
-                      <>
-                        <div className="py-2 border-b border-white/5 mt-4">
-                          <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Verbruik & Uitstoot</span>
-                        </div>
-                        {car.fuelCombined && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Gemiddeld</span>
-                            <span className="text-white text-sm text-right">{car.fuelCombined} L/100km</span>
-                          </div>
-                        )}
-                        {car.fuelCity && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Stad</span>
-                            <span className="text-white text-sm text-right">{car.fuelCity} L/100km</span>
-                          </div>
-                        )}
-                        {car.fuelHighway && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Snelweg</span>
-                            <span className="text-white text-sm text-right">{car.fuelHighway} L/100km</span>
-                          </div>
-                        )}
-                        {car.fuelRange && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Actieradius</span>
-                            <span className="text-white text-sm text-right">{car.fuelRange} km</span>
-                          </div>
-                        )}
-                        {car.co2Emission && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">CO₂-uitstoot</span>
-                            <span className="text-white text-sm text-right">{car.co2Emission} g/km</span>
-                          </div>
-                        )}
-                        {car.energyLabel && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Energielabel</span>
-                            <span className="text-white text-sm text-right font-bold">{car.energyLabel}</span>
-                          </div>
-                        )}
-                        {car.emissionClass && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Emissieklasse</span>
-                            <span className="text-white text-sm text-right">{car.emissionClass}</span>
-                          </div>
-                        )}
-                        {car.particulateFilter !== undefined && car.particulateFilter !== null && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Roetfilter</span>
-                            <span className="text-white text-sm text-right">{car.particulateFilter ? 'Ja' : 'Nee'}</span>
-                          </div>
-                        )}
-                      </>
+                    {car.doors && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">Deuren</span>
+                        <span className="text-white">{car.doors}</span>
+                      </div>
                     )}
-
-                    {/* Weight & Dimensions Section */}
-                    {(car.weight || car.length || car.towWeightBraked) && (
-                      <>
-                        <div className="py-2 border-b border-white/5 mt-4">
-                          <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Afmetingen & Gewicht</span>
-                        </div>
-                        {car.weight && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Gewicht</span>
-                            <span className="text-white text-sm text-right">{new Intl.NumberFormat('nl-BE').format(car.weight)} kg</span>
-                          </div>
-                        )}
-                        {car.maxWeight && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Max. massa</span>
-                            <span className="text-white text-sm text-right">{new Intl.NumberFormat('nl-BE').format(car.maxWeight)} kg</span>
-                          </div>
-                        )}
-                        {car.payload && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Laadvermogen</span>
-                            <span className="text-white text-sm text-right">{new Intl.NumberFormat('nl-BE').format(car.payload)} kg</span>
-                          </div>
-                        )}
-                        {car.towWeightBraked && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Trekgewicht (geremd)</span>
-                            <span className="text-white text-sm text-right">{new Intl.NumberFormat('nl-BE').format(car.towWeightBraked)} kg</span>
-                          </div>
-                        )}
-                        {car.towWeightUnbraked && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Trekgewicht (ongeremd)</span>
-                            <span className="text-white text-sm text-right">{new Intl.NumberFormat('nl-BE').format(car.towWeightUnbraked)} kg</span>
-                          </div>
-                        )}
-                        {car.wheelbase && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Wielbasis</span>
-                            <span className="text-white text-sm text-right">{new Intl.NumberFormat('nl-BE').format(car.wheelbase)} mm</span>
-                          </div>
-                        )}
-                        {car.length && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Lengte</span>
-                            <span className="text-white text-sm text-right">{new Intl.NumberFormat('nl-BE').format(car.length)} mm</span>
-                          </div>
-                        )}
-                        {car.width && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Breedte</span>
-                            <span className="text-white text-sm text-right">{new Intl.NumberFormat('nl-BE').format(car.width)} mm</span>
-                          </div>
-                        )}
-                        {car.height && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Hoogte</span>
-                            <span className="text-white text-sm text-right">{new Intl.NumberFormat('nl-BE').format(car.height)} mm</span>
-                          </div>
-                        )}
-                      </>
+                    {car.seats && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">Zitplaatsen</span>
+                        <span className="text-white">{car.seats}</span>
+                      </div>
                     )}
-
-                    {/* Legal & History Section */}
-                    {(car.btwMarge || car.apkUntil || car.warrantyMonths || car.previousOwners || car.firstRegistration) && (
-                      <>
-                        <div className="py-2 border-b border-white/5 mt-4">
-                          <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Historie & Juridisch</span>
-                        </div>
-                        {car.firstRegistration && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">1e registratie</span>
-                            <span className="text-white text-sm text-right">{car.firstRegistration}</span>
-                          </div>
-                        )}
-                        {car.previousOwners !== undefined && car.previousOwners !== null && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Vorige eigenaren</span>
-                            <span className="text-white text-sm text-right">{car.previousOwners}</span>
-                          </div>
-                        )}
-                        {car.apkUntil && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">APK geldig tot</span>
-                            <span className="text-white text-sm text-right">{car.apkUntil}</span>
-                          </div>
-                        )}
-                        {car.warrantyMonths && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">Garantie</span>
-                            <span className="text-white text-sm text-right">{car.warrantyMonths} maanden{car.warrantyKm ? ` / ${new Intl.NumberFormat('nl-BE').format(car.warrantyKm)} km` : ''}</span>
-                          </div>
-                        )}
-                        {car.btwMarge && (
-                          <div className="flex justify-between py-2 border-b border-white/5">
-                            <span className="text-gray-500 text-sm">BTW/Marge</span>
-                            <span className="text-white text-sm text-right">{car.btwMarge === 'M' ? 'Marge' : 'BTW aftrekbaar'}</span>
-                          </div>
-                        )}
-                      </>
+                    {car.horsepower && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">Vermogen</span>
+                        <span className="text-white">{car.horsepower} PK{car.kwPower ? ` (${car.kwPower} kW)` : ''}</span>
+                      </div>
+                    )}
+                    {car.engineCc && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">Motorinhoud</span>
+                        <span className="text-white">{new Intl.NumberFormat('nl-BE').format(car.engineCc)} cc</span>
+                      </div>
+                    )}
+                    {car.cylinders && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">Cilinders</span>
+                        <span className="text-white">{car.cylinders}</span>
+                      </div>
+                    )}
+                    {car.gears && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">Versnellingen</span>
+                        <span className="text-white">{car.gears}</span>
+                      </div>
+                    )}
+                    {car.torque && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">Koppel</span>
+                        <span className="text-white">{car.torque} Nm</span>
+                      </div>
+                    )}
+                    {car.topSpeed && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">Topsnelheid</span>
+                        <span className="text-white">{car.topSpeed} km/u</span>
+                      </div>
+                    )}
+                    {car.acceleration && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">0-100 km/u</span>
+                        <span className="text-white">{car.acceleration} sec</span>
+                      </div>
+                    )}
+                    {car.fuelCombined && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">Verbruik</span>
+                        <span className="text-white">{car.fuelCombined} L/100km</span>
+                      </div>
+                    )}
+                    {car.co2Emission && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">CO₂</span>
+                        <span className="text-white">{car.co2Emission} g/km</span>
+                      </div>
+                    )}
+                    {car.energyLabel && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">Energielabel</span>
+                        <span className="text-white font-bold">{car.energyLabel}</span>
+                      </div>
+                    )}
+                    {car.weight && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">Gewicht</span>
+                        <span className="text-white">{new Intl.NumberFormat('nl-BE').format(car.weight)} kg</span>
+                      </div>
+                    )}
+                    {car.firstRegistration && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">1e registratie</span>
+                        <span className="text-white">{car.firstRegistration}</span>
+                      </div>
+                    )}
+                    {car.previousOwners !== undefined && car.previousOwners !== null && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">Eigenaren</span>
+                        <span className="text-white">{car.previousOwners}</span>
+                      </div>
+                    )}
+                    {car.btwMarge && (
+                      <div className="flex justify-between py-1.5 border-b border-white/5">
+                        <span className="text-gray-500">BTW/Marge</span>
+                        <span className="text-white">{car.btwMarge === 'M' ? 'Marge' : 'BTW aftrekbaar'}</span>
+                      </div>
                     )}
                   </div>
                 </div>
