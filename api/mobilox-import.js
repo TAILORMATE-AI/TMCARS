@@ -317,13 +317,51 @@ export default async function handler(req, res) {
       console.log('data.interieurkleur:', JSON.stringify(data.interieurkleur));
       console.log('data.bekleding:', JSON.stringify(data.bekleding));
 
-      // Extract colors with fallbacks
-      const exteriorColor = getTextValue(data.basiskleur) || getTextValue(data.kleur) || null;
+      // Extract colors with fallbacks - combine with paint type for full description
+      const baseColor = getTextValue(data.basiskleur) || getTextValue(data.kleur) || null;
+      const paintType = getTextValue(data.laksoort) || null;
+      // Combine color with paint type (e.g., "Zwart Metallic")
+      let exteriorColor = baseColor;
+      if (baseColor && paintType) {
+        // Capitalize first letter of color
+        const capitalizedColor = baseColor.charAt(0).toUpperCase() + baseColor.slice(1).toLowerCase();
+        const capitalizedPaint = paintType.charAt(0).toUpperCase() + paintType.slice(1).toLowerCase();
+        exteriorColor = `${capitalizedColor} ${capitalizedPaint}`;
+      } else if (baseColor) {
+        exteriorColor = baseColor.charAt(0).toUpperCase() + baseColor.slice(1).toLowerCase();
+      }
+
       const interiorColor = getTextValue(data.basisinterieurkleur) || getTextValue(data.interieurkleur) || null;
 
       console.log('Extracted exterior color:', exteriorColor);
       console.log('Extracted interior color:', interiorColor);
 
+      // Map fuel codes to full Dutch names
+      const fuelMap = {
+        'D': 'Diesel',
+        'B': 'Benzine',
+        'E': 'Elektrisch',
+        'H': 'Hybride',
+        'L': 'LPG',
+        'C': 'CNG',
+        'W': 'Waterstof',
+        'P': 'Plug-in Hybride'
+      };
+      const fuelCode = getTextValue(data.brandstof) || '';
+      const fuelType = fuelMap[fuelCode.toUpperCase()] || fuelCode || null;
+
+      // Map transmission codes to full Dutch names
+      const transmissionMap = {
+        'A': 'Automaat',
+        'H': 'Handgeschakeld',
+        'S': 'Semi-automaat',
+        'V': 'CVT'
+      };
+      const transCode = getTextValue(data.transmissie) || '';
+      const transmissionType = transmissionMap[transCode.toUpperCase()] || transCode || null;
+
+      console.log('Fuel code:', fuelCode, '→', fuelType);
+      console.log('Transmission code:', transCode, '→', transmissionType);
 
       // Build vehicle data object - CORE FIELDS ONLY (existing columns)
       // Extended fields require running the ALTER TABLE SQL first!
@@ -334,8 +372,8 @@ export default async function handler(req, res) {
         price: price,
         year: year,
         mileage: mileage,
-        fuel_type: fuel || null,
-        transmission: getTextValue(data.transmissie) || null,
+        fuel_type: fuelType,
+        transmission: transmissionType,
         image_urls: imageUrls,
         status: 'active',
         // Extended fields - uncomment after running ALTER TABLE SQL:
