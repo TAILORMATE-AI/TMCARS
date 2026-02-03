@@ -36,115 +36,115 @@ const OPTION_CATEGORIES = {
 };
 
 const FormatMixed = ({ text }: { text: string | number }) => {
-    const textStr = String(text);
-    return (
-        <>
-            {textStr.split(/(€)/g).map((part, i) =>
-                part === '€' ? <span key={i} className="font-orbitron">€</span> : part
-            )}
-        </>
-    );
+  const textStr = String(text);
+  return (
+    <>
+      {textStr.split(/(€)/g).map((part, i) =>
+        part === '€' ? <span key={i} className="font-orbitron">€</span> : part
+      )}
+    </>
+  );
 };
 
 // --- LIGHTBOX COMPONENT ---
 const Lightbox = ({ images, initialIndex, onClose }: { images: string[], initialIndex: number, onClose: () => void }) => {
   const [index, setIndex] = useState(initialIndex);
   const [scale, setScale] = useState(1);
-  
+
   // Reset zoom when navigating
   useEffect(() => setScale(1), [index]);
 
   // Keyboard Navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') onClose();
-        if (e.key === 'ArrowLeft') navigate(-1);
-        if (e.key === 'ArrowRight') navigate(1);
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft') navigate(-1);
+      if (e.key === 'ArrowRight') navigate(1);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [index]);
 
   const navigate = (dir: number) => {
-      let newIndex = index + dir;
-      if (newIndex < 0) newIndex = images.length - 1;
-      if (newIndex >= images.length) newIndex = 0;
-      setIndex(newIndex);
+    let newIndex = index + dir;
+    if (newIndex < 0) newIndex = images.length - 1;
+    if (newIndex >= images.length) newIndex = 0;
+    setIndex(newIndex);
   };
 
   const toggleZoom = (e?: React.MouseEvent) => {
-      e?.stopPropagation();
-      setScale(prev => prev === 1 ? 2.5 : 1);
+    e?.stopPropagation();
+    setScale(prev => prev === 1 ? 2.5 : 1);
   };
 
   return (
     <motion.div
-        initial={{ opacity: 0 }} 
-        animate={{ opacity: 1 }} 
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[200] bg-black/98 flex items-center justify-center backdrop-blur-md"
-        onClick={onClose}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[200] bg-black/98 flex items-center justify-center backdrop-blur-md"
+      onClick={onClose}
     >
-        {/* Top Controls */}
-        <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-50 pointer-events-none">
-            <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-white text-xs font-bold uppercase tracking-widest pointer-events-auto">
-                {index + 1} / {images.length}
-            </div>
-            <button 
-                onClick={onClose} 
-                className="p-3 bg-white/10 hover:bg-white hover:text-black rounded-full border border-white/10 transition-all duration-300 pointer-events-auto"
-            >
-                <X size={20} />
-            </button>
+      {/* Top Controls */}
+      <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-50 pointer-events-none">
+        <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-white text-xs font-bold uppercase tracking-widest pointer-events-auto">
+          {index + 1} / {images.length}
         </div>
-
-        {/* Navigation Arrows */}
-        <button 
-            onClick={(e) => { e.stopPropagation(); navigate(-1); }}
-            className="absolute left-6 top-1/2 -translate-y-1/2 p-4 bg-black/50 hover:bg-white hover:text-black rounded-full border border-white/10 transition-all duration-300 z-50 hidden md:block group"
+        <button
+          onClick={onClose}
+          className="p-3 bg-white/10 hover:bg-white hover:text-black rounded-full border border-white/10 transition-all duration-300 pointer-events-auto"
         >
-            <ChevronLeft size={24} className="group-hover:scale-110 transition-transform" />
+          <X size={20} />
         </button>
-        <button 
-            onClick={(e) => { e.stopPropagation(); navigate(1); }}
-            className="absolute right-6 top-1/2 -translate-y-1/2 p-4 bg-black/50 hover:bg-white hover:text-black rounded-full border border-white/10 transition-all duration-300 z-50 hidden md:block group"
+      </div>
+
+      {/* Navigation Arrows */}
+      <button
+        onClick={(e) => { e.stopPropagation(); navigate(-1); }}
+        className="absolute left-6 top-1/2 -translate-y-1/2 p-4 bg-black/50 hover:bg-white hover:text-black rounded-full border border-white/10 transition-all duration-300 z-50 hidden md:block group"
+      >
+        <ChevronLeft size={24} className="group-hover:scale-110 transition-transform" />
+      </button>
+      <button
+        onClick={(e) => { e.stopPropagation(); navigate(1); }}
+        className="absolute right-6 top-1/2 -translate-y-1/2 p-4 bg-black/50 hover:bg-white hover:text-black rounded-full border border-white/10 transition-all duration-300 z-50 hidden md:block group"
+      >
+        <ChevronRight size={24} className="group-hover:scale-110 transition-transform" />
+      </button>
+
+      {/* Image Container */}
+      <div className="w-full h-full flex items-center justify-center overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <motion.div
+          animate={{ scale: scale }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className={`relative ${scale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
+          drag={scale > 1}
+          dragConstraints={{ left: -1000, right: 1000, top: -800, bottom: 800 }}
+          dragElastic={0.1}
+          onClick={toggleZoom}
         >
-            <ChevronRight size={24} className="group-hover:scale-110 transition-transform" />
+          <img
+            src={images[index]}
+            alt={`View ${index}`}
+            className="max-h-[85vh] max-w-[90vw] object-contain select-none shadow-2xl"
+            draggable={false}
+          />
+        </motion.div>
+      </div>
+
+      {/* Bottom Zoom Controls */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex gap-4 pointer-events-auto" onClick={e => e.stopPropagation()}>
+        <button
+          onClick={(e) => toggleZoom(e)}
+          className="flex items-center gap-2 px-6 py-3 bg-white text-black hover:bg-gray-200 rounded-full font-bold text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+        >
+          {scale === 1 ? (
+            <><ZoomIn size={16} /> Zoom In</>
+          ) : (
+            <><ZoomOut size={16} /> Zoom Out</>
+          )}
         </button>
-
-        {/* Image Container */}
-        <div className="w-full h-full flex items-center justify-center overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <motion.div
-                animate={{ scale: scale }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className={`relative ${scale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
-                drag={scale > 1}
-                dragConstraints={{ left: -1000, right: 1000, top: -800, bottom: 800 }}
-                dragElastic={0.1}
-                onClick={toggleZoom}
-            >
-                <img 
-                    src={images[index]} 
-                    alt={`View ${index}`} 
-                    className="max-h-[85vh] max-w-[90vw] object-contain select-none shadow-2xl"
-                    draggable={false}
-                />
-            </motion.div>
-        </div>
-
-        {/* Bottom Zoom Controls */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex gap-4 pointer-events-auto" onClick={e => e.stopPropagation()}>
-            <button 
-                onClick={(e) => toggleZoom(e)}
-                className="flex items-center gap-2 px-6 py-3 bg-white text-black hover:bg-gray-200 rounded-full font-bold text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
-            >
-                {scale === 1 ? (
-                    <><ZoomIn size={16} /> Zoom In</>
-                ) : (
-                    <><ZoomOut size={16} /> Zoom Out</>
-                )}
-            </button>
-        </div>
+      </div>
     </motion.div>
   );
 };
@@ -159,14 +159,14 @@ const OptionsAccordion: React.FC<{ options: string[] }> = ({ options }) => {
 
   if (categorized.length === 0 && options.length > 0) {
     return (
-       <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          {options.map((opt, idx) => (
-            <li key={idx} className="flex items-start gap-2 text-sm text-gray-300 font-light">
-               <CheckCircle size={14} className="text-white mt-1 flex-shrink-0" />
-               <span>{opt}</span>
-            </li>
-          ))}
-       </ul>
+      <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        {options.map((opt, idx) => (
+          <li key={idx} className="flex items-start gap-2 text-sm text-gray-300 font-light">
+            <CheckCircle size={14} className="text-white mt-1 flex-shrink-0" />
+            <span>{opt}</span>
+          </li>
+        ))}
+      </ul>
     );
   }
 
@@ -221,7 +221,7 @@ const CarDetailPage: React.FC<CarDetailPageProps> = ({ onOpenAdmin }) => {
   const navigate = useNavigate();
   const { cars } = useCars();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  
+
   // Find car by ID
   const car = cars.find((c) => c.id === Number(id));
 
@@ -252,7 +252,7 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
   return (
     <>
       <div className="min-h-screen bg-[#020202] text-white pt-24 pb-12 font-sans selection:bg-white selection:text-black">
-        
+
         {/* Breadcrumb / Back Navigation */}
         <div className="max-w-[1400px] mx-auto px-6 mb-8">
           <Link to="/collectie" className="inline-flex items-center text-gray-500 hover:text-white transition-colors uppercase tracking-widest text-xs font-bold gap-2">
@@ -262,34 +262,34 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
         </div>
 
         <div className="max-w-[1400px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">
-          
+
           {/* LEFT COLUMN: Images (7/12) */}
           <div className="lg:col-span-7 space-y-4">
             {/* Main Hero Image */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6 }}
               className="w-full aspect-video bg-black overflow-hidden border border-white/10 relative group cursor-zoom-in"
               onClick={() => setLightboxIndex(0)}
             >
-              <img 
-                src={galleryImages[0]} 
-                alt={`${car.make} ${car.model}`} 
-                className={`w-full h-full object-contain transition-transform duration-700 group-hover:scale-105 ${car.is_sold ? 'grayscale-[0.5]' : ''}`} 
+              <img
+                src={galleryImages[0]}
+                alt={`${car.make} ${car.model}`}
+                className={`w-full h-full object-contain transition-transform duration-700 group-hover:scale-105 ${car.is_sold ? 'grayscale-[0.5]' : ''}`}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
-                 <ZoomIn className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-md" size={48} />
+                <ZoomIn className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-md" size={48} />
               </div>
 
               {car.is_sold && (
-                   <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-20 pointer-events-none">
-                       <div className="border-y-2 border-white/50 bg-black/50 px-12 py-4 transform -rotate-12 backdrop-blur-md">
-                           <span className="text-4xl font-bold text-white uppercase tracking-[0.3em] font-sans drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
-                               Verkocht
-                           </span>
-                       </div>
-                   </div>
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-20 pointer-events-none">
+                  <div className="border-y-2 border-white/50 bg-black/50 px-12 py-4 transform -rotate-12 backdrop-blur-md">
+                    <span className="text-4xl font-bold text-white uppercase tracking-[0.3em] font-sans drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                      Verkocht
+                    </span>
+                  </div>
+                </div>
               )}
             </motion.div>
 
@@ -297,17 +297,17 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
             {galleryImages.length > 1 && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {galleryImages.slice(1).map((img, idx) => (
-                  <motion.div 
-                      key={idx}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 + (idx * 0.1) }}
-                      className="aspect-[4/3] bg-[#111] border border-white/10 overflow-hidden group cursor-zoom-in relative"
-                      onClick={() => setLightboxIndex(idx + 1)}
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + (idx * 0.1) }}
+                    className="aspect-[4/3] bg-[#111] border border-white/10 overflow-hidden group cursor-zoom-in relative"
+                    onClick={() => setLightboxIndex(idx + 1)}
                   >
                     <img src={img} alt={`Gallery ${idx}`} className={`w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500 ${car.is_sold ? 'grayscale-[0.5]' : ''}`} />
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                         <ZoomIn className="text-white drop-shadow-md" size={24} />
+                      <ZoomIn className="text-white drop-shadow-md" size={24} />
                     </div>
                   </motion.div>
                 ))}
@@ -318,12 +318,12 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
           {/* RIGHT COLUMN: Details & Context (5/12) */}
           <div className="lg:col-span-5 relative">
             <div className="sticky top-32 space-y-8">
-              
+
               {/* Header Info */}
-              <motion.div 
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6 }}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6 }}
               >
                 <h4 className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-2">{car.make}</h4>
                 <h1 className="text-3xl md:text-5xl font-bold text-white uppercase tracking-wider mb-4 leading-tight">
@@ -345,7 +345,7 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
                       <span className="text-sm font-bold text-white">{car.year}</span>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-white/5 rounded-none border border-white/5">
                       <Gauge size={18} className="text-gray-300" />
@@ -388,59 +388,145 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
                   </p>
                 </div>
 
+                {/* Technical Specifications */}
+                <div className="bg-[#0A0A0A] border border-white/10 p-6 mb-8">
+                  <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-4 border-b border-white/10 pb-3">
+                    Technische Specificaties
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    {/* Exterior */}
+                    {car.color && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Kleur</span>
+                        <span className="text-white capitalize">{car.color}{car.paintType ? ` (${car.paintType})` : ''}</span>
+                      </div>
+                    )}
+                    {car.doors && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Deuren</span>
+                        <span className="text-white">{car.doors}</span>
+                      </div>
+                    )}
+                    {/* Interior */}
+                    {car.interiorColor && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Interieurkleur</span>
+                        <span className="text-white capitalize">{car.interiorColor}</span>
+                      </div>
+                    )}
+                    {car.upholstery && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Bekleding</span>
+                        <span className="text-white capitalize">{car.upholstery}</span>
+                      </div>
+                    )}
+                    {car.seats && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Zitplaatsen</span>
+                        <span className="text-white">{car.seats}</span>
+                      </div>
+                    )}
+                    {/* Engine & Performance */}
+                    {car.horsepower && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Vermogen</span>
+                        <span className="text-white">{car.horsepower} PK</span>
+                      </div>
+                    )}
+                    {car.engineCc && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Motorinhoud</span>
+                        <span className="text-white">{new Intl.NumberFormat('nl-BE').format(car.engineCc)} cc</span>
+                      </div>
+                    )}
+                    {car.cylinders && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Cilinders</span>
+                        <span className="text-white">{car.cylinders}</span>
+                      </div>
+                    )}
+                    {car.torque && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Koppel</span>
+                        <span className="text-white">{car.torque} Nm</span>
+                      </div>
+                    )}
+                    {car.topSpeed && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Topsnelheid</span>
+                        <span className="text-white">{car.topSpeed} km/u</span>
+                      </div>
+                    )}
+                    {car.weight && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Gewicht</span>
+                        <span className="text-white">{new Intl.NumberFormat('nl-BE').format(car.weight)} kg</span>
+                      </div>
+                    )}
+                    {/* Legal */}
+                    {car.btwMarge && (
+                      <div className="flex justify-between col-span-2 pt-2 border-t border-white/5 mt-2">
+                        <span className="text-gray-500">BTW/Marge</span>
+                        <span className="text-white">{car.btwMarge === 'M' ? 'Marge (BTW niet aftrekbaar)' : 'BTW aftrekbaar'}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+
                 {/* Options List */}
                 {car.options && car.options.length > 0 && (
                   <div className="mb-8 bg-[#0A0A0A] border border-white/10 px-6">
-                     <OptionsAccordion options={car.options} />
+                    <OptionsAccordion options={car.options} />
                   </div>
                 )}
 
                 {/* CTAs */}
                 <div className="space-y-4 pt-4 border-t border-white/10">
                   <div className="grid grid-cols-2 gap-4">
-                      {car.is_sold ? (
-                          <div className="col-span-2 flex items-center justify-center gap-2 bg-gray-900 border border-white/10 text-gray-500 py-4 text-xs font-bold uppercase tracking-widest cursor-not-allowed">
-                              <Lock size={16} /> Verkocht
-                          </div>
-                      ) : (
-                          <>
-                            <a 
-                                href={`https://wa.me/32476965940?text=Ik%20heb%20interesse%20in%20de%20${car.make}%20${car.model}`} 
-                                target="_blank" 
-                                rel="noreferrer"
-                                className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white py-4 text-xs font-bold uppercase tracking-widest transition-colors"
-                            >
-                                <MessageCircle size={16} /> WhatsApp
-                            </a>
-                            <a 
-                                href="tel:+32476965940"
-                                className="flex items-center justify-center gap-2 bg-white hover:bg-gray-200 text-black py-4 text-xs font-bold uppercase tracking-widest transition-colors"
-                            >
-                                <Phone size={16} /> Bel Ons
-                            </a>
-                          </>
-                      )}
+                    {car.is_sold ? (
+                      <div className="col-span-2 flex items-center justify-center gap-2 bg-gray-900 border border-white/10 text-gray-500 py-4 text-xs font-bold uppercase tracking-widest cursor-not-allowed">
+                        <Lock size={16} /> Verkocht
+                      </div>
+                    ) : (
+                      <>
+                        <a
+                          href={`https://wa.me/32476965940?text=Ik%20heb%20interesse%20in%20de%20${car.make}%20${car.model}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white py-4 text-xs font-bold uppercase tracking-widest transition-colors"
+                        >
+                          <MessageCircle size={16} /> WhatsApp
+                        </a>
+                        <a
+                          href="tel:+32476965940"
+                          className="flex items-center justify-center gap-2 bg-white hover:bg-gray-200 text-black py-4 text-xs font-bold uppercase tracking-widest transition-colors"
+                        >
+                          <Phone size={16} /> Bel Ons
+                        </a>
+                      </>
+                    )}
                   </div>
-                  
+
                   {car.is_sold ? (
-                      <Link 
-                        to="/contact"
-                        className="w-full flex items-center justify-center gap-2 border border-white/20 hover:border-white text-gray-300 hover:text-white py-4 text-xs font-bold uppercase tracking-widest transition-colors"
-                      >
-                          <Search size={16} /> Start Zoekopdracht
-                      </Link>
+                    <Link
+                      to="/contact"
+                      className="w-full flex items-center justify-center gap-2 border border-white/20 hover:border-white text-gray-300 hover:text-white py-4 text-xs font-bold uppercase tracking-widest transition-colors"
+                    >
+                      <Search size={16} /> Start Zoekopdracht
+                    </Link>
                   ) : (
-                      <Link 
-                          to="/contact"
-                          className="w-full flex items-center justify-center gap-2 border border-white/20 hover:border-white text-gray-300 hover:text-white py-4 text-xs font-bold uppercase tracking-widest transition-colors"
-                      >
-                          <Share2 size={16} /> Vraag Offerte / Inruil
-                      </Link>
+                    <Link
+                      to="/contact"
+                      className="w-full flex items-center justify-center gap-2 border border-white/20 hover:border-white text-gray-300 hover:text-white py-4 text-xs font-bold uppercase tracking-widest transition-colors"
+                    >
+                      <Share2 size={16} /> Vraag Offerte / Inruil
+                    </Link>
                   )}
 
                   <div className="flex items-center justify-center gap-4 text-[10px] text-gray-500 uppercase tracking-widest mt-4">
-                      <span className="flex items-center gap-1"><ShieldCheck size={12} /> 12 Maanden Garantie</span>
-                      <span className="flex items-center gap-1"><MapPin size={12} /> Zichtbaar op afspraak</span>
+                    <span className="flex items-center gap-1"><ShieldCheck size={12} /> 12 Maanden Garantie</span>
+                    <span className="flex items-center gap-1"><MapPin size={12} /> Zichtbaar op afspraak</span>
                   </div>
                 </div>
 
@@ -449,18 +535,18 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
           </div>
         </div>
       </div>
-      
+
       {/* Lightbox Overlay */}
       <AnimatePresence>
         {lightboxIndex !== null && (
-            <Lightbox 
-                images={galleryImages} 
-                initialIndex={lightboxIndex} 
-                onClose={() => setLightboxIndex(null)} 
-            />
+          <Lightbox
+            images={galleryImages}
+            initialIndex={lightboxIndex}
+            onClose={() => setLightboxIndex(null)}
+          />
         )}
       </AnimatePresence>
-      
+
       <Footer onOpenAdmin={onOpenAdmin} />
     </>
   );

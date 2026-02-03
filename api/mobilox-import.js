@@ -257,13 +257,27 @@ export default async function handler(req, res) {
         fuel_type: fuel || null,
         transmission: getTextValue(data.transmissie) || null,
         image_urls: imageUrls,
-        // Additional specifications
+        // Body & Exterior
         body_type: bodyType,
         color: getTextValue(data.basiskleur) || null,
+        paint_type: getTextValue(data.laksoort) || null,
+        doors: parseInt(getTextValue(data.aantal_deuren)) || null,
+        // Interior
+        interior_color: getTextValue(data.basisinterieurkleur) || getTextValue(data.interieurkleur) || null,
+        upholstery: getTextValue(data.bekleding) || null,
+        seats: parseInt(getTextValue(data.aantal_zitplaatsen)) || null,
+        // Engine & Performance
         horsepower: parseInt(getTextValue(data.vermogen_motor_pk)) || null,
         engine_cc: parseInt(getTextValue(data.cilinder_inhoud)) || null,
-        doors: parseInt(getTextValue(data.aantal_deuren)) || null,
+        cylinders: parseInt(getTextValue(data.cilinder_aantal)) || null,
+        torque: parseInt(getTextValue(data.koppel)) || null,
+        top_speed: parseInt(getTextValue(data.topsnelheid)) || null,
+        // Weight & Dimensions
+        weight: parseInt(getTextValue(data.massa)) || null,
+        // Registration & Legal
         license_plate: getTextValue(data.kenteken) || null,
+        btw_marge: getTextValue(data.btw_marge) || null,
+        // Rich data
         options: options,
         categories: categories,
         description: getTextValue(data.opmerkingen) || null,

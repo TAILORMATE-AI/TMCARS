@@ -57,7 +57,21 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       featured: (record.categories || []).includes('Recent'),
       expertTip: '', // Expert tip is usually manual content, default empty
       is_archived: record.status === 'archived',
-      is_sold: record.status === 'sold'
+      is_sold: record.status === 'sold',
+      // Extended specifications from Mobilox
+      color: record.color || null,
+      paintType: record.paint_type || null,
+      interiorColor: record.interior_color || null,
+      upholstery: record.upholstery || null,
+      seats: record.seats || null,
+      horsepower: record.horsepower || null,
+      engineCc: record.engine_cc || null,
+      cylinders: record.cylinders || null,
+      torque: record.torque || null,
+      topSpeed: record.top_speed || null,
+      weight: record.weight || null,
+      doors: record.doors || null,
+      btwMarge: record.btw_marge || null,
     };
   };
 

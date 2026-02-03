@@ -17,7 +17,22 @@ export interface Car {
   expertTip?: string; // Tom's personal note
   is_archived?: boolean; // For soft deletion/archiving
   is_sold?: boolean; // New: For marking cars as sold in the Admin Cockpit
+  // Extended specifications from Mobilox
+  color?: string; // Exterior color (basiskleur)
+  paintType?: string; // Paint type (metallic, etc.)
+  interiorColor?: string; // Interior color
+  upholstery?: string; // Seat material (leder, stof, etc.)
+  seats?: number; // Number of seats
+  horsepower?: number; // Engine power in PK
+  engineCc?: number; // Engine displacement in cc
+  cylinders?: number; // Number of cylinders
+  torque?: number; // Torque in Nm
+  topSpeed?: number; // Top speed in km/h
+  weight?: number; // Weight in kg
+  doors?: number; // Number of doors
+  btwMarge?: string; // BTW/Marge status
 }
+
 
 export interface NavItem {
   label: string;
