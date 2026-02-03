@@ -236,7 +236,7 @@ export default async function handler(req, res) {
       console.log('Options count:', options.length);
 
       // Build vehicle data object - only include fields that exist in database
-      // Verified columns: hexon_nr, make, model, price, year, mileage, fuel_type, transmission, image_urls, categories, options, status
+      // Verified columns: hexon_nr, make, model, price, year, mileage, fuel_type, transmission, image_urls, options, status
       const vehicleData = {
         hexon_nr: hexonNr,
         make: getTextValue(data.merk) || null,
@@ -247,7 +247,6 @@ export default async function handler(req, res) {
         fuel_type: fuel || null,
         transmission: getTextValue(data.transmissie) || null,
         image_urls: imageUrls,
-        categories: categories,
         options: options,
         status: 'active',
       };
