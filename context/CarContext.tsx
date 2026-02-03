@@ -42,36 +42,79 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: record.id,
       make: record.make || 'Onbekend',
       model: record.model || 'Model',
+      variant: record.variant || null,
       year: record.year || new Date().getFullYear(),
+      modelYear: record.model_year || null,
       price: `€ ${new Intl.NumberFormat('nl-BE').format(priceVal)}`,
       priceValue: priceVal,
       mileage: `${new Intl.NumberFormat('nl-BE').format(mileageVal)} km`,
       transmission: record.transmission || 'Automaat',
       fuel: record.fuel_type || 'Benzine',
-      image: images[0] || '', // Use first image as main
+      image: images[0] || '',
       images: images,
-      // Map rich data fields
+      // Categories & Classification
       categories: record.categories || [],
       bodyType: record.body_type || 'Overig',
+      vehicleType: record.vehicle_type || null,
       options: record.options || [],
+      // Flags
       featured: (record.categories || []).includes('Recent'),
-      expertTip: '', // Expert tip is usually manual content, default empty
       is_archived: record.status === 'archived',
       is_sold: record.status === 'sold',
-      // Extended specifications from Mobilox
+      isNew: record.is_new || false,
+      // Content
+      expertTip: '',
+      description: record.description || null,
+      // Exterior
       color: record.color || null,
+      colorCode: record.color_code || null,
       paintType: record.paint_type || null,
+      doors: record.doors || null,
+      // Interior
       interiorColor: record.interior_color || null,
       upholstery: record.upholstery || null,
       seats: record.seats || null,
+      // Engine & Performance
       horsepower: record.horsepower || null,
+      kwPower: record.kw_power || null,
       engineCc: record.engine_cc || null,
       cylinders: record.cylinders || null,
+      gears: record.gears || null,
       torque: record.torque || null,
       topSpeed: record.top_speed || null,
+      acceleration: record.acceleration || null,
+      // Fuel Consumption
+      fuelCity: record.fuel_city || null,
+      fuelHighway: record.fuel_highway || null,
+      fuelCombined: record.fuel_combined || null,
+      fuelRange: record.fuel_range || null,
+      // Emissions & Environment
+      co2Emission: record.co2_emission || null,
+      energyLabel: record.energy_label || null,
+      emissionClass: record.emission_class || null,
+      particulateFilter: record.particulate_filter || null,
+      // Weight & Dimensions
       weight: record.weight || null,
-      doors: record.doors || null,
+      maxWeight: record.max_weight || null,
+      payload: record.payload || null,
+      towWeightBraked: record.tow_weight_braked || null,
+      towWeightUnbraked: record.tow_weight_unbraked || null,
+      wheelbase: record.wheelbase || null,
+      length: record.length || null,
+      width: record.width || null,
+      height: record.height || null,
+      // Registration & Legal
+      licensePlate: record.license_plate || null,
+      vin: record.vin || null,
       btwMarge: record.btw_marge || null,
+      firstRegistration: record.first_registration || null,
+      constructionDate: record.construction_date || null,
+      // APK & Warranty
+      apkUntil: record.apk_until || null,
+      warrantyMonths: record.warranty_months || null,
+      warrantyKm: record.warranty_km || null,
+      // History
+      previousOwners: record.previous_owners || null,
     };
   };
 

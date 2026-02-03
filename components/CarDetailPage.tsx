@@ -388,89 +388,296 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
                   </p>
                 </div>
 
-                {/* Technical Specifications */}
-                <div className="bg-[#0A0A0A] border border-white/10 p-6 mb-8">
-                  <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-4 border-b border-white/10 pb-3">
-                    Technische Specificaties
+                {/* Technical Specifications - Full Breakdown */}
+                <div className="bg-[#0A0A0A] border border-white/10 p-6 mb-8 space-y-6">
+                  <h3 className="text-xs font-bold text-white uppercase tracking-widest border-b border-white/10 pb-3">
+                    Volledige Specificaties
                   </h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    {/* Exterior */}
-                    {car.color && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Kleur</span>
-                        <span className="text-white capitalize">{car.color}{car.paintType ? ` (${car.paintType})` : ''}</span>
-                      </div>
-                    )}
-                    {car.doors && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Deuren</span>
-                        <span className="text-white">{car.doors}</span>
-                      </div>
-                    )}
-                    {/* Interior */}
-                    {car.interiorColor && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Interieurkleur</span>
-                        <span className="text-white capitalize">{car.interiorColor}</span>
-                      </div>
-                    )}
-                    {car.upholstery && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Bekleding</span>
-                        <span className="text-white capitalize">{car.upholstery}</span>
-                      </div>
-                    )}
-                    {car.seats && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Zitplaatsen</span>
-                        <span className="text-white">{car.seats}</span>
-                      </div>
-                    )}
-                    {/* Engine & Performance */}
-                    {car.horsepower && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Vermogen</span>
-                        <span className="text-white">{car.horsepower} PK</span>
-                      </div>
-                    )}
-                    {car.engineCc && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Motorinhoud</span>
-                        <span className="text-white">{new Intl.NumberFormat('nl-BE').format(car.engineCc)} cc</span>
-                      </div>
-                    )}
-                    {car.cylinders && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Cilinders</span>
-                        <span className="text-white">{car.cylinders}</span>
-                      </div>
-                    )}
-                    {car.torque && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Koppel</span>
-                        <span className="text-white">{car.torque} Nm</span>
-                      </div>
-                    )}
-                    {car.topSpeed && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Topsnelheid</span>
-                        <span className="text-white">{car.topSpeed} km/u</span>
-                      </div>
-                    )}
-                    {car.weight && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Gewicht</span>
-                        <span className="text-white">{new Intl.NumberFormat('nl-BE').format(car.weight)} kg</span>
-                      </div>
-                    )}
-                    {/* Legal */}
-                    {car.btwMarge && (
-                      <div className="flex justify-between col-span-2 pt-2 border-t border-white/5 mt-2">
-                        <span className="text-gray-500">BTW/Marge</span>
-                        <span className="text-white">{car.btwMarge === 'M' ? 'Marge (BTW niet aftrekbaar)' : 'BTW aftrekbaar'}</span>
-                      </div>
-                    )}
+
+                  {/* Variant Info */}
+                  {car.variant && (
+                    <div className="pb-4 border-b border-white/5">
+                      <span className="text-xs text-gray-500 uppercase tracking-wider">Uitvoering</span>
+                      <p className="text-white mt-1">{car.variant}</p>
+                    </div>
+                  )}
+
+                  {/* Exterior Section */}
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Exterieur</h4>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      {car.color && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Kleur</span>
+                          <span className="text-white capitalize">{car.color}</span>
+                        </div>
+                      )}
+                      {car.paintType && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Laksoort</span>
+                          <span className="text-white capitalize">{car.paintType}</span>
+                        </div>
+                      )}
+                      {car.doors && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Deuren</span>
+                          <span className="text-white">{car.doors}</span>
+                        </div>
+                      )}
+                      {car.bodyType && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Carrosserie</span>
+                          <span className="text-white">{car.bodyType}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Interior Section */}
+                  {(car.interiorColor || car.upholstery || car.seats) && (
+                    <div className="space-y-3 pt-4 border-t border-white/5">
+                      <h4 className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Interieur</h4>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {car.interiorColor && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Kleur</span>
+                            <span className="text-white capitalize">{car.interiorColor}</span>
+                          </div>
+                        )}
+                        {car.upholstery && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Bekleding</span>
+                            <span className="text-white capitalize">{car.upholstery}</span>
+                          </div>
+                        )}
+                        {car.seats && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Zitplaatsen</span>
+                            <span className="text-white">{car.seats}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Engine Section */}
+                  {(car.horsepower || car.engineCc || car.cylinders || car.gears) && (
+                    <div className="space-y-3 pt-4 border-t border-white/5">
+                      <h4 className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Motor & Aandrijving</h4>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {car.horsepower && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Vermogen</span>
+                            <span className="text-white">{car.horsepower} PK{car.kwPower ? ` (${car.kwPower} kW)` : ''}</span>
+                          </div>
+                        )}
+                        {car.engineCc && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Motorinhoud</span>
+                            <span className="text-white">{new Intl.NumberFormat('nl-BE').format(car.engineCc)} cc</span>
+                          </div>
+                        )}
+                        {car.cylinders && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Cilinders</span>
+                            <span className="text-white">{car.cylinders}</span>
+                          </div>
+                        )}
+                        {car.gears && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Versnellingen</span>
+                            <span className="text-white">{car.gears}</span>
+                          </div>
+                        )}
+                        {car.torque && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Koppel</span>
+                            <span className="text-white">{car.torque} Nm</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Performance Section */}
+                  {(car.topSpeed || car.acceleration) && (
+                    <div className="space-y-3 pt-4 border-t border-white/5">
+                      <h4 className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Prestaties</h4>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {car.topSpeed && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Topsnelheid</span>
+                            <span className="text-white">{car.topSpeed} km/u</span>
+                          </div>
+                        )}
+                        {car.acceleration && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">0-100 km/u</span>
+                            <span className="text-white">{car.acceleration} sec</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fuel & Emissions Section */}
+                  {(car.fuelCombined || car.fuelCity || car.co2Emission || car.energyLabel) && (
+                    <div className="space-y-3 pt-4 border-t border-white/5">
+                      <h4 className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Verbruik & Uitstoot</h4>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {car.fuelCombined && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Gemiddeld verbruik</span>
+                            <span className="text-white">{car.fuelCombined} L/100km</span>
+                          </div>
+                        )}
+                        {car.fuelCity && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Stadsverbruik</span>
+                            <span className="text-white">{car.fuelCity} L/100km</span>
+                          </div>
+                        )}
+                        {car.fuelHighway && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Snelwegverbruik</span>
+                            <span className="text-white">{car.fuelHighway} L/100km</span>
+                          </div>
+                        )}
+                        {car.fuelRange && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Actieradius</span>
+                            <span className="text-white">{car.fuelRange} km</span>
+                          </div>
+                        )}
+                        {car.co2Emission && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">CO₂-uitstoot</span>
+                            <span className="text-white">{car.co2Emission} g/km</span>
+                          </div>
+                        )}
+                        {car.energyLabel && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Energielabel</span>
+                            <span className="text-white font-bold">{car.energyLabel}</span>
+                          </div>
+                        )}
+                        {car.emissionClass && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Emissieklasse</span>
+                            <span className="text-white">{car.emissionClass}</span>
+                          </div>
+                        )}
+                        {car.particulateFilter !== undefined && car.particulateFilter !== null && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Roetfilter</span>
+                            <span className="text-white">{car.particulateFilter ? 'Ja' : 'Nee'}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Weight & Dimensions Section */}
+                  {(car.weight || car.length || car.towWeightBraked) && (
+                    <div className="space-y-3 pt-4 border-t border-white/5">
+                      <h4 className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Afmetingen & Gewicht</h4>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {car.weight && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Gewicht</span>
+                            <span className="text-white">{new Intl.NumberFormat('nl-BE').format(car.weight)} kg</span>
+                          </div>
+                        )}
+                        {car.maxWeight && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Max. massa</span>
+                            <span className="text-white">{new Intl.NumberFormat('nl-BE').format(car.maxWeight)} kg</span>
+                          </div>
+                        )}
+                        {car.payload && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Laadvermogen</span>
+                            <span className="text-white">{new Intl.NumberFormat('nl-BE').format(car.payload)} kg</span>
+                          </div>
+                        )}
+                        {car.towWeightBraked && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Trekgewicht (geremd)</span>
+                            <span className="text-white">{new Intl.NumberFormat('nl-BE').format(car.towWeightBraked)} kg</span>
+                          </div>
+                        )}
+                        {car.towWeightUnbraked && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Trekgewicht (ongeremd)</span>
+                            <span className="text-white">{new Intl.NumberFormat('nl-BE').format(car.towWeightUnbraked)} kg</span>
+                          </div>
+                        )}
+                        {car.wheelbase && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Wielbasis</span>
+                            <span className="text-white">{new Intl.NumberFormat('nl-BE').format(car.wheelbase)} mm</span>
+                          </div>
+                        )}
+                        {car.length && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Lengte</span>
+                            <span className="text-white">{new Intl.NumberFormat('nl-BE').format(car.length)} mm</span>
+                          </div>
+                        )}
+                        {car.width && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Breedte</span>
+                            <span className="text-white">{new Intl.NumberFormat('nl-BE').format(car.width)} mm</span>
+                          </div>
+                        )}
+                        {car.height && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Hoogte</span>
+                            <span className="text-white">{new Intl.NumberFormat('nl-BE').format(car.height)} mm</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Legal & History Section */}
+                  {(car.btwMarge || car.apkUntil || car.warrantyMonths || car.previousOwners || car.firstRegistration) && (
+                    <div className="space-y-3 pt-4 border-t border-white/5">
+                      <h4 className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Historie & Juridisch</h4>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {car.firstRegistration && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">1e registratie</span>
+                            <span className="text-white">{car.firstRegistration}</span>
+                          </div>
+                        )}
+                        {car.previousOwners !== undefined && car.previousOwners !== null && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Vorige eigenaren</span>
+                            <span className="text-white">{car.previousOwners}</span>
+                          </div>
+                        )}
+                        {car.apkUntil && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">APK geldig tot</span>
+                            <span className="text-white">{car.apkUntil}</span>
+                          </div>
+                        )}
+                        {car.warrantyMonths && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Garantie</span>
+                            <span className="text-white">{car.warrantyMonths} maanden{car.warrantyKm ? ` / ${new Intl.NumberFormat('nl-BE').format(car.warrantyKm)} km` : ''}</span>
+                          </div>
+                        )}
+                        {car.btwMarge && (
+                          <div className="flex justify-between col-span-2">
+                            <span className="text-gray-500">BTW/Marge</span>
+                            <span className="text-white">{car.btwMarge === 'M' ? 'Marge (BTW niet aftrekbaar)' : 'BTW aftrekbaar'}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
 
