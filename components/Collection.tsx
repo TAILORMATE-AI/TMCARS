@@ -31,12 +31,13 @@ const Collection: React.FC = () => {
     const inStockCars = cars.filter(car => !car.is_archived);
     const stockCount = inStockCars.length;
 
-    // Reset scroll position on mount to prevent browser restore
+    // Start slider at the right side (scroll to end on mount)
     useEffect(() => {
         if (scrollRef.current) {
-            scrollRef.current.scrollLeft = 0;
+            // Scroll to the far right
+            scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
         }
-    }, []);
+    }, [inStockCars]);
 
     const scroll = (direction: 'left' | 'right') => {
         if (scrollRef.current) {
