@@ -325,35 +325,33 @@ export default async function handler(req, res) {
       console.log('Extracted interior color:', interiorColor);
 
 
-      // Build vehicle data object with ALL specifications from XML
+      // Build vehicle data object - CORE FIELDS ONLY (existing columns)
+      // Extended fields require running the ALTER TABLE SQL first!
       const vehicleData = {
         hexon_nr: hexonNr,
-        // Basic Info
         make: getTextValue(data.merk) || null,
         model: getTextValue(data.model) || null,
-        variant: getTextValue(data.type) || null, // Model variant/uitvoering
         price: price,
         year: year,
-        model_year: parseInt(getTextValue(data.modeljaar)) || year,
         mileage: mileage,
-        // Dates
+        fuel_type: fuel || null,
+        transmission: getTextValue(data.transmissie) || null,
+        image_urls: imageUrls,
+        status: 'active',
+        // Extended fields - uncomment after running ALTER TABLE SQL:
+        variant: getTextValue(data.type) || null,
+        model_year: parseInt(getTextValue(data.modeljaar)) || year,
         first_registration: getTextValue(data.datum_deel_1) || null,
         construction_date: getTextValue(data.constructiedatum) || null,
-        // Vehicle Type
         vehicle_type: getTextValue(data.voertuigsoort) || null,
         body_type: bodyType,
         doors: parseInt(getTextValue(data.aantal_deuren)) || null,
         seats: parseInt(getTextValue(data.aantal_zitplaatsen)) || null,
-        // Exterior
         color: exteriorColor,
         color_code: getTextValue(data.kleurcode) || null,
         paint_type: getTextValue(data.laksoort) || null,
-        // Interior  
         interior_color: interiorColor,
         upholstery: getTextValue(data.bekleding) || null,
-        // Engine & Drivetrain
-        fuel_type: fuel || null,
-        transmission: getTextValue(data.transmissie) || null,
         gears: parseInt(getTextValue(data.aantal_versnellingen)) || null,
         engine_cc: parseInt(getTextValue(data.cilinder_inhoud)) || null,
         cylinders: parseInt(getTextValue(data.cilinder_aantal)) || null,
@@ -362,17 +360,14 @@ export default async function handler(req, res) {
         torque: parseInt(getTextValue(data.koppel)) || null,
         top_speed: parseInt(getTextValue(data.topsnelheid)) || null,
         acceleration: parseFloat(getTextValue(data.acceleratie)?.replace(',', '.')) || null,
-        // Fuel Consumption
         fuel_city: parseFloat(getTextValue(data.verbruik_stad)?.replace(',', '.')) || null,
         fuel_highway: parseFloat(getTextValue(data.verbruik_snelweg)?.replace(',', '.')) || null,
-        fuel_combined: parseFloat(getTextValue(data.verbruik_gecombineerd)?.replace(',', '.')) || null,
+        fuel_combined: parseFloat(getTextValue(data.gemiddeld_verbruik)?.replace(',', '.')) || null,
         fuel_range: parseInt(getTextValue(data.actieradius)) || null,
-        // Emissions & Environment
         co2_emission: parseInt(getTextValue(data.co2_uitstoot)) || null,
         energy_label: getTextValue(data.energielabel) || null,
         emission_class: getTextValue(data.emissieklasse) || null,
         particulate_filter: getTextValue(data.roetfilter) === 'J' ? true : (getTextValue(data.roetfilter) === 'N' ? false : null),
-        // Weight & Dimensions
         weight: parseInt(getTextValue(data.massa)) || null,
         max_weight: parseInt(getTextValue(data.max_massa)) || null,
         payload: parseInt(getTextValue(data.laadvermogen)) || null,
@@ -382,27 +377,34 @@ export default async function handler(req, res) {
         length: parseInt(getTextValue(data.lengte)) || null,
         width: parseInt(getTextValue(data.breedte)) || null,
         height: parseInt(getTextValue(data.hoogte)) || null,
-        // Legal & Registration
         license_plate: getTextValue(data.kenteken) || null,
-        vin: getTextValue(data.chassisnr) || null,
+        vin: getTextValue(data.vin) || getTextValue(data.chassisnr) || null,
         btw_marge: getTextValue(data.btw_marge) || null,
-        is_new: getTextValue(data.nieuw_voertuig) === 'J',
-        // APK (Dutch Vehicle Inspection)
-        apk_until: getTextValue(data.apk_datum) || null,
-        // Warranty
-        warranty_months: parseInt(getTextValue(data.garantie?.maanden)) || null,
-        warranty_km: parseInt(getTextValue(data.garantie?.km)) || null,
-        // Images & Media
-        image_urls: imageUrls,
-        // Previous owners
+        is_new: getTextValue(data.nieuw_voertuig) === 'j' || getTextValue(data.nieuw_voertuig) === 'J',
+        apk_until: getTextValue(data.apk?.['@_tot']) || null,
+        warranty_months: parseInt(getTextValue(data.garantie_maanden)) || null,
+        warranty_km: parseInt(getTextValue(data.garantie_km)) || null,
         previous_owners: parseInt(getTextValue(data.aantal_eigenaren)) || null,
-        // Rich data (JSONB)
         options: options,
         categories: categories,
         description: getTextValue(data.opmerkingen) || null,
-        // Status
-        status: 'active',
       };
+
+      console.log('=== EXTRACTED DATA SUMMARY ===');
+      console.log('Make:', vehicleData.make);
+      console.log('Model:', vehicleData.model);
+      console.log('Variant:', vehicleData.variant);
+      console.log('Price:', vehicleData.price);
+      console.log('Year:', vehicleData.year);
+      console.log('Mileage:', vehicleData.mileage);
+      console.log('Color:', vehicleData.color);
+      console.log('Interior:', vehicleData.interior_color);
+      console.log('Upholstery:', vehicleData.upholstery);
+      console.log('Horsepower:', vehicleData.horsepower);
+      console.log('Fuel Combined:', vehicleData.fuel_combined);
+      console.log('Image URLs:', vehicleData.image_urls ? vehicleData.image_urls.substring(0, 100) : 'NONE');
+      console.log('Options count:', options.length);
+      console.log('Categories:', vehicleData.categories);
 
       console.log('Vehicle data to save:', JSON.stringify(vehicleData, null, 2));
 
