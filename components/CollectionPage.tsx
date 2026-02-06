@@ -131,26 +131,34 @@ const cardGridItemVariants: Variants = {
 };
 
 // --- CAR CARD COMPONENT ---
-const CarCard: React.FC<{ car: Car }> = ({ car }) => {
+const CarCard: React.FC<{ car: Car, onSoldClick?: (car: Car) => void }> = ({ car, onSoldClick }) => {
   const navigate = useNavigate();
   const isSold = car.is_sold;
+
+  const handleClick = () => {
+    if (isSold && onSoldClick) {
+      onSoldClick(car);
+    } else if (!isSold) {
+      navigate(`/collectie/${car.id}`);
+    }
+  };
 
   return (
     <motion.div
       layout
       variants={cardGridItemVariants}
-      className={`relative group border transition-all duration-300 aspect-[4/3] lg:col-span-4 ${isSold ? 'border-white/5 opacity-80' : 'border-white/10 hover:border-white/30'}`}
+      className={`relative group border transition-all duration-300 aspect-[4/3] lg:col-span-4 ${isSold ? 'border-white/5 opacity-80 hover:opacity-100' : 'border-white/10 hover:border-white/30'}`}
     >
       <motion.div
-        className={`relative bg-[#030303]/60 ${!isSold ? 'group-hover:bg-[#030303]/80 cursor-pointer' : ''} backdrop-blur-[20px] h-full transition-colors duration-500 overflow-hidden rounded-none z-10`}
-        onClick={!isSold ? () => navigate(`/collectie/${car.id}`) : undefined}
-        whileTap={!isSold ? "tap" : undefined}
-        variants={!isSold ? { tap: { scale: 0.97 } } : undefined}
+        className={`relative bg-[#030303]/60 group-hover:bg-[#030303]/80 cursor-pointer backdrop-blur-[20px] h-full transition-colors duration-500 overflow-hidden rounded-none z-10`}
+        onClick={handleClick}
+        whileTap="tap"
+        variants={{ tap: { scale: 0.97 } }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
       >
         {/* Image */}
         <div className="absolute inset-0 z-0">
-          <img src={car.image} alt={`${car.make} ${car.model}`} className={`w-full h-full object-cover transition-transform duration-500 ${!isSold ? 'group-hover:scale-105' : 'grayscale-[0.5]'}`} />
+          <img src={car.image} alt={`${car.make} ${car.model}`} className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${isSold ? 'grayscale-[0.5]' : ''}`} />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,black)] opacity-40 pointer-events-none"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300"></div>
 
@@ -184,11 +192,13 @@ const CarCard: React.FC<{ car: Car }> = ({ car }) => {
             <div>
               <h3 className="text-2xl font-bold text-white uppercase tracking-wider">{car.make} <span className="font-semibold normal-case text-gray-200">{car.model}</span></h3>
             </div>
-            <div className="text-right">
-              <p className={`text-xl font-bold ${isSold ? 'text-gray-400 line-through decoration-white/50' : 'text-white'}`}>
-                <FormatMixed text={car.price} />
-              </p>
-            </div>
+            {!isSold && (
+              <div className="text-right">
+                <p className="text-xl font-bold text-white">
+                  <FormatMixed text={car.price} />
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </motion.div>
@@ -203,6 +213,7 @@ interface CollectionPageProps {
 const CollectionPage: React.FC<CollectionPageProps> = ({ onOpenAdmin }) => {
   const { cars } = useCars();
   const [activeCategory, setActiveCategory] = React.useState('All');
+  const [soldModalCar, setSoldModalCar] = React.useState<Car | null>(null);
 
   // Filters State
   const [selectedMake, setSelectedMake] = React.useState<string>('All');
@@ -512,7 +523,7 @@ const CollectionPage: React.FC<CollectionPageProps> = ({ onOpenAdmin }) => {
                 exit="exit"
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 relative z-0 min-h-[600px]"
               >
-                {filteredCars.map((car) => <CarCard key={car.id} car={car} />)}
+                {filteredCars.map((car) => <CarCard key={car.id} car={car} onSoldClick={setSoldModalCar} />)}
               </motion.div>
             </AnimatePresence>
             {filteredCars.length === 0 && (
@@ -530,6 +541,63 @@ const CollectionPage: React.FC<CollectionPageProps> = ({ onOpenAdmin }) => {
           </div>
         </div>
       </div>
+
+      {/* SOLD CAR MODAL */}
+      <AnimatePresence>
+        {soldModalCar && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => setSoldModalCar(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative max-w-2xl w-full bg-[#0A0A0A] border border-white/10 overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setSoldModalCar(null)}
+                className="absolute top-4 right-4 z-20 p-2 bg-black/50 border border-white/20 text-white hover:bg-white hover:text-black transition-colors"
+              >
+                <X size={20} />
+              </button>
+
+              {/* Image */}
+              <div className="relative aspect-[4/3]">
+                <img
+                  src={soldModalCar.image}
+                  alt={`${soldModalCar.make} ${soldModalCar.model}`}
+                  className="w-full h-full object-cover"
+                />
+                {/* SOLD Badge */}
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                  <div className="border-y-2 border-white/50 bg-black/50 px-12 py-3 transform -rotate-12 backdrop-blur-md">
+                    <span className="text-4xl font-bold text-white uppercase tracking-[0.3em] drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+                      Verkocht
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Info */}
+              <div className="p-6 text-center">
+                <h2 className="text-2xl font-bold text-white uppercase tracking-widest">
+                  {soldModalCar.make} <span className="font-semibold normal-case text-gray-200">{soldModalCar.model}</span>
+                </h2>
+                <p className="text-gray-500 text-sm mt-2 uppercase tracking-wider">
+                  {soldModalCar.year} • {soldModalCar.fuel} • {soldModalCar.transmission}
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <Footer onOpenAdmin={onOpenAdmin} />
     </>
   );

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCars } from '../context/CarContext.tsx';
@@ -30,6 +30,13 @@ const Collection: React.FC = () => {
 
     const inStockCars = cars.filter(car => !car.is_archived);
     const stockCount = inStockCars.length;
+
+    // Always start scroll at right position (newest first)
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+        }
+    }, [inStockCars]);
 
 
 
@@ -98,7 +105,7 @@ const Collection: React.FC = () => {
                         scrollPaddingLeft: 'max(1.5rem, calc((100vw - 1400px) / 2 + 1.5rem))'
                     }}
                 >
-                    <div className="flex space-x-6 w-max items-stretch">
+                    <div className="flex justify-start space-x-6 w-max items-stretch">
                         {inStockCars.map((car, index) => (
                             <motion.div
                                 key={car.id}
