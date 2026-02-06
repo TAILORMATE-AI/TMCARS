@@ -110,16 +110,87 @@ export default async function handler(req, res) {
 
     // 5. Handle Actions
     if (action === 'delete') {
-      console.log('Action: DELETE vehicle', hexonNr);
-      const { error } = await supabase
+      console.log('Action: MARK AS SOLD vehicle', hexonNr);
+
+      // First, get the current vehicle data to retrieve the first image URL
+      const { data: vehicle, error: fetchError } = await supabase
         .from('vehicles')
-        .delete()
+        .select('image_urls')
+        .eq('hexon_nr', hexonNr)
+        .single();
+
+      if (fetchError) {
+        console.error('Supabase FETCH error:', fetchError);
+        // If vehicle doesn't exist, just return success
+        if (fetchError.code === 'PGRST116') {
+          console.log('Vehicle not found, nothing to mark as sold');
+          return res.status(200).send('1');
+        }
+        throw fetchError;
+      }
+
+      let storedImageUrl = null;
+
+      // Download and store the first (showcase) image in Supabase Storage
+      if (vehicle?.image_urls) {
+        const firstImageUrl = vehicle.image_urls.split(',')[0]?.trim();
+
+        if (firstImageUrl) {
+          try {
+            console.log('Downloading showcase image:', firstImageUrl);
+
+            // Fetch the image from Mobilox
+            const imageResponse = await fetch(firstImageUrl);
+            if (imageResponse.ok) {
+              const imageBuffer = await imageResponse.arrayBuffer();
+              const fileName = `${hexonNr}.jpg`;
+
+              // Upload to Supabase Storage
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('sold-vehicles')
+                .upload(fileName, imageBuffer, {
+                  contentType: 'image/jpeg',
+                  upsert: true
+                });
+
+              if (uploadError) {
+                console.error('Storage UPLOAD error:', uploadError);
+              } else {
+                // Get public URL for the stored image
+                const { data: urlData } = supabase.storage
+                  .from('sold-vehicles')
+                  .getPublicUrl(fileName);
+
+                storedImageUrl = urlData.publicUrl;
+                console.log('Stored image URL:', storedImageUrl);
+              }
+            } else {
+              console.error('Failed to download image:', imageResponse.status);
+            }
+          } catch (imgError) {
+            console.error('Image storage error:', imgError.message);
+            // Continue anyway - car will be marked sold without image
+          }
+        }
+      }
+
+      // Mark vehicle as sold (don't delete)
+      const { error: updateError } = await supabase
+        .from('vehicles')
+        .update({
+          status: 'sold',
+          sold_at: new Date().toISOString(),
+          image_urls: storedImageUrl || null
+        })
         .eq('hexon_nr', hexonNr);
 
-      if (error) {
-        console.error('Supabase DELETE error:', error);
-        throw error;
+      if (updateError) {
+        console.error('Supabase UPDATE error:', updateError);
+        throw updateError;
       }
+
+      console.log('Vehicle marked as SOLD with stored image');
+
 
     } else if (action === 'add' || action === 'change') {
       console.log('Action:', action.toUpperCase(), 'vehicle', hexonNr);

@@ -27,21 +27,21 @@ const Navbar: React.FC<NavbarProps> = ({ isLoading = false }) => {
 
   const handleNavigation = (path: string, hash?: string) => {
     setIsMobileMenuOpen(false);
-  
+
     const performScroll = (elementId: string) => {
       const element = document.getElementById(elementId);
       if (element) {
         const navbarHeight = 96; // Corresponds to h-24 (6rem = 96px)
         const elementPosition = element.getBoundingClientRect().top;
         const offsetPosition = elementPosition + window.pageYOffset - navbarHeight;
-        
+
         window.scrollTo({
           top: offsetPosition,
           behavior: 'smooth'
         });
       }
     };
-  
+
     // If we are already on the target page, just scroll.
     if (location.pathname === path) {
       if (hash) {
@@ -51,10 +51,10 @@ const Navbar: React.FC<NavbarProps> = ({ isLoading = false }) => {
       }
       return;
     }
-    
+
     // If we need to navigate first...
     navigate(path);
-  
+
     if (hash) {
       // Poll for the element to appear after navigation.
       let attempts = 0;
@@ -93,114 +93,113 @@ const Navbar: React.FC<NavbarProps> = ({ isLoading = false }) => {
     );
 
     if (to) {
-        return <Link to={to} className="group">{content}</Link>;
+      return <Link to={to} className="group">{content}</Link>;
     }
     return <button onClick={onClick} className="group">{content}</button>;
   };
 
   // Helper for Mobile/Tablet Nav Items
   const MobileNavItem = ({ to, label, onClick }: { to?: string, label: string, onClick: () => void }) => {
-      const isActive = to ? (location.pathname === to || (to !== '/' && location.pathname.startsWith(to))) : false;
-      
-      const content = (
-        <span className="group relative inline-block cursor-pointer">
-            <span className={`text-2xl font-bold uppercase tracking-widest transition-colors duration-300 ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-300'}`}>
-                {label}
-            </span>
-            {/* Active Underline for Mobile */}
-            <span className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-full h-[2px] bg-white transition-transform duration-300 origin-center ${isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-50'}`} />
-        </span>
-      );
+    const isActive = to ? (location.pathname === to || (to !== '/' && location.pathname.startsWith(to))) : false;
 
-      if (to) {
-        return <Link to={to} onClick={onClick}>{content}</Link>;
-      }
-      return <div onClick={onClick}>{content}</div>;
+    const content = (
+      <span className="group relative inline-block cursor-pointer">
+        <span className={`text-2xl font-bold uppercase tracking-widest transition-colors duration-300 ${isActive ? 'text-white' : 'text-gray-500 group-hover:text-gray-300'}`}>
+          {label}
+        </span>
+        {/* Active Underline for Mobile */}
+        <span className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-full h-[2px] bg-white transition-transform duration-300 origin-center ${isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-50'}`} />
+      </span>
+    );
+
+    if (to) {
+      return <Link to={to} onClick={onClick}>{content}</Link>;
+    }
+    return <div onClick={onClick}>{content}</div>;
   };
 
   return (
-    <nav 
-      className={`fixed top-0 left-0 right-0 z-50 h-24 flex items-center transition-all duration-500 ease-in-out border-none outline-none ${
-        isScrolled 
-          ? 'bg-black/60 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.5)]' 
-          : 'bg-transparent'
-      }`}
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 h-24 flex items-center transition-all duration-500 ease-in-out border-none outline-none ${isScrolled
+        ? 'bg-black/60 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
+        : 'bg-transparent'
+        }`}
     >
       <div className="max-w-[1400px] w-full mx-auto px-6 flex justify-between items-center h-full">
-        
+
         {/* Logo - Fade In */}
         <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="relative z-[201]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className="relative z-[201]"
         >
-            <Link 
-                to="/" 
-                onClick={handleLogoClick}
-                className="block group"
-            >
-            <img 
-                src="https://tailormate.ai/tmcars/images/tmcarslogowit.png" 
-                alt="TM CARS" 
-                className="h-10 md:h-12 object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] transition-transform duration-300 group-hover:scale-105" 
+          <Link
+            to="/"
+            onClick={handleLogoClick}
+            className="block group"
+          >
+            <img
+              src="https://tailormate.ai/tmcars/images/tmcarslogowit.png"
+              alt="TM CARS"
+              className="h-10 md:h-12 object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] transition-transform duration-300 group-hover:scale-105"
             />
-            </Link>
+          </Link>
         </motion.div>
 
         {/* Desktop Links - Right Aligned - Hidden on Mobile/Tablet (lg) */}
         <AnimatePresence>
           {!isLoading && (
-              <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  className="hidden lg:flex items-center space-x-10"
-              >
-                <NavItem label="Aanbod" to="/collectie" isActive={location.pathname.startsWith('/collectie')} />
-                <NavItem label="Verkopen" to="/verkopen" isActive={location.pathname === '/verkopen'} />
-                <NavItem label="Over Ons" onClick={() => handleNavigation('/', 'onze-aanpak')} isActive={false} />
-                <NavItem label="Contact" to="/contact" isActive={location.pathname === '/contact'} />
-                
-                {/* CTA BUTTON */}
-                <Link to="/afspraak" className="relative group cursor-pointer border-none outline-none bg-transparent p-0 ml-4">
-                    <div className="relative">
-                        {/* 1. Outer Border Layer */}
-                        <div 
-                            className="absolute inset-0 bg-white/30 transition-colors duration-300 group-hover:bg-white"
-                            style={{ clipPath: clipPathValue }}
-                        />
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="hidden lg:flex items-center space-x-10"
+            >
+              <NavItem label="Aanbod" to="/collectie" isActive={location.pathname.startsWith('/collectie')} />
+              <NavItem label="Verkopen" to="/verkopen" isActive={location.pathname === '/verkopen'} />
+              <NavItem label="Over Ons" onClick={() => handleNavigation('/', 'onze-aanpak')} isActive={false} />
+              <NavItem label="Contact" to="/contact" isActive={location.pathname === '/contact'} />
 
-                        {/* 2. Inner Glass Layer */}
-                        <div 
-                            className="absolute inset-[1px] bg-black/40 backdrop-blur-md transition-colors duration-300 group-hover:bg-white" 
-                            style={{ clipPath: clipPathValue }} 
-                        />
+              {/* CTA BUTTON */}
+              <Link to="/afspraak" className="relative group cursor-pointer border-none outline-none bg-transparent p-0 ml-4">
+                <div className="relative">
+                  {/* 1. Outer Border Layer */}
+                  <div
+                    className="absolute inset-0 bg-white/30 transition-colors duration-300 group-hover:bg-white"
+                    style={{ clipPath: clipPathValue }}
+                  />
 
-                        {/* 3. Text Content Layer */}
-                        <div className="relative px-6 py-3 z-10 flex items-center justify-center">
-                            <span className="text-[10px] font-bold text-white tracking-[0.2em] uppercase select-none transition-colors duration-300 group-hover:text-black">
-                                Afspraak Maken
-                            </span>
-                        </div>
-                    </div>
-                </Link>
-              </motion.div>
+                  {/* 2. Inner Background Layer - solid color, no blur */}
+                  <div
+                    className="absolute inset-[1px] bg-[#1a1a1a] transition-colors duration-300 group-hover:bg-white"
+                    style={{ clipPath: clipPathValue }}
+                  />
+
+                  {/* 3. Text Content Layer */}
+                  <div className="relative px-6 py-3 z-10 flex items-center justify-center">
+                    <span className="text-[10px] font-bold text-white tracking-[0.2em] uppercase select-none transition-colors duration-300 group-hover:text-black">
+                      Afspraak Maken
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
           )}
         </AnimatePresence>
 
         {/* Mobile/Tablet Toggle (Visible below lg) */}
         <AnimatePresence>
           {!isLoading && (
-              <motion.button
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="lg:hidden text-white p-2 z-[202] hover:bg-white/10 rounded-full transition-colors"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                aria-label={isMobileMenuOpen ? "Sluit menu" : "Open menu"}
-              >
-                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </motion.button>
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="lg:hidden text-white p-2 z-[202] hover:bg-white/10 rounded-full transition-colors"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? "Sluit menu" : "Open menu"}
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </motion.button>
           )}
         </AnimatePresence>
       </div>
@@ -219,32 +218,32 @@ const Navbar: React.FC<NavbarProps> = ({ isLoading = false }) => {
               <MobileNavItem to="/verkopen" label="Verkopen" onClick={() => setIsMobileMenuOpen(false)} />
               <MobileNavItem label="Over Ons" onClick={() => handleNavigation('/', 'onze-aanpak')} />
               <MobileNavItem to="/contact" label="Contact" onClick={() => setIsMobileMenuOpen(false)} />
-              
-              <Link 
-                to="/afspraak" 
-                onClick={() => setIsMobileMenuOpen(false)} 
+
+              <Link
+                to="/afspraak"
+                onClick={() => setIsMobileMenuOpen(false)}
                 className="relative group cursor-pointer border-none outline-none bg-transparent p-0 mt-8"
               >
-                  <div className="relative">
-                      {/* 1. Outer Border Layer */}
-                      <div 
-                          className="absolute inset-0 bg-white/30 transition-colors duration-300 group-hover:bg-white"
-                          style={{ clipPath: clipPathValue }}
-                      />
+                <div className="relative">
+                  {/* 1. Outer Border Layer */}
+                  <div
+                    className="absolute inset-0 bg-white/30 transition-colors duration-300 group-hover:bg-white"
+                    style={{ clipPath: clipPathValue }}
+                  />
 
-                      {/* 2. Inner Glass Layer */}
-                      <div 
-                          className="absolute inset-[1px] bg-black/40 backdrop-blur-md transition-colors duration-300 group-hover:bg-white" 
-                          style={{ clipPath: clipPathValue }} 
-                      />
+                  {/* 2. Inner Background Layer - solid color, no blur */}
+                  <div
+                    className="absolute inset-[1px] bg-[#1a1a1a] transition-colors duration-300 group-hover:bg-white"
+                    style={{ clipPath: clipPathValue }}
+                  />
 
-                      {/* 3. Text Content Layer */}
-                      <div className="relative px-12 py-4 z-10 flex items-center justify-center">
-                          <span className="text-xl font-bold text-white tracking-[0.2em] uppercase select-none transition-colors duration-300 group-hover:text-black">
-                              Afspraak Maken
-                          </span>
-                      </div>
+                  {/* 3. Text Content Layer */}
+                  <div className="relative px-12 py-4 z-10 flex items-center justify-center">
+                    <span className="text-xl font-bold text-white tracking-[0.2em] uppercase select-none transition-colors duration-300 group-hover:text-black">
+                      Afspraak Maken
+                    </span>
                   </div>
+                </div>
               </Link>
             </div>
           </motion.div>

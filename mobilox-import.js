@@ -110,16 +110,87 @@ export default async function handler(req, res) {
 
     // 5. Handle Actions
     if (action === 'delete') {
-      console.log('Action: DELETE vehicle', hexonNr);
-      const { error } = await supabase
+      console.log('Action: MARK AS SOLD vehicle', hexonNr);
+
+      // First, get the current vehicle data to retrieve the first image URL
+      const { data: vehicle, error: fetchError } = await supabase
         .from('vehicles')
-        .delete()
+        .select('image_urls')
+        .eq('hexon_nr', hexonNr)
+        .single();
+
+      if (fetchError) {
+        console.error('Supabase FETCH error:', fetchError);
+        // If vehicle doesn't exist, just return success
+        if (fetchError.code === 'PGRST116') {
+          console.log('Vehicle not found, nothing to mark as sold');
+          return res.status(200).send('1');
+        }
+        throw fetchError;
+      }
+
+      let storedImageUrl = null;
+
+      // Download and store the first (showcase) image in Supabase Storage
+      if (vehicle?.image_urls) {
+        const firstImageUrl = vehicle.image_urls.split(',')[0]?.trim();
+
+        if (firstImageUrl) {
+          try {
+            console.log('Downloading showcase image:', firstImageUrl);
+
+            // Fetch the image from Mobilox
+            const imageResponse = await fetch(firstImageUrl);
+            if (imageResponse.ok) {
+              const imageBuffer = await imageResponse.arrayBuffer();
+              const fileName = `${hexonNr}.jpg`;
+
+              // Upload to Supabase Storage
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('sold-vehicles')
+                .upload(fileName, imageBuffer, {
+                  contentType: 'image/jpeg',
+                  upsert: true
+                });
+
+              if (uploadError) {
+                console.error('Storage UPLOAD error:', uploadError);
+              } else {
+                // Get public URL for the stored image
+                const { data: urlData } = supabase.storage
+                  .from('sold-vehicles')
+                  .getPublicUrl(fileName);
+
+                storedImageUrl = urlData.publicUrl;
+                console.log('Stored image URL:', storedImageUrl);
+              }
+            } else {
+              console.error('Failed to download image:', imageResponse.status);
+            }
+          } catch (imgError) {
+            console.error('Image storage error:', imgError.message);
+            // Continue anyway - car will be marked sold without image
+          }
+        }
+      }
+
+      // Mark vehicle as sold (don't delete)
+      const { error: updateError } = await supabase
+        .from('vehicles')
+        .update({
+          status: 'sold',
+          sold_at: new Date().toISOString(),
+          image_urls: storedImageUrl || null
+        })
         .eq('hexon_nr', hexonNr);
 
-      if (error) {
-        console.error('Supabase DELETE error:', error);
-        throw error;
+      if (updateError) {
+        console.error('Supabase UPDATE error:', updateError);
+        throw updateError;
       }
+
+      console.log('Vehicle marked as SOLD with stored image');
+
 
     } else if (action === 'add' || action === 'change') {
       console.log('Action:', action.toUpperCase(), 'vehicle', hexonNr);
@@ -149,18 +220,28 @@ export default async function handler(req, res) {
 
         for (const field of priceFields) {
           if (field && field.prijzen) {
-            // Handle <prijzen><prijs><bedrag>...</bedrag></prijs></prijzen>
-            const prijzen = field.prijzen;
-            if (prijzen.prijs) {
-              const prijs = Array.isArray(prijzen.prijs) ? prijzen.prijs[0] : prijzen.prijs;
+            let prijzen = field.prijzen;
+
+            // Handle array of prijzen (multiple countries)
+            if (Array.isArray(prijzen)) {
+              prijzen = prijzen[0];
+            }
+
+            // Navigate to prijs element
+            if (prijzen && prijzen.prijs) {
+              let prijs = prijzen.prijs;
+              // Handle array of prijs elements
+              if (Array.isArray(prijs)) {
+                prijs = prijs[0];
+              }
+
               if (prijs && prijs.bedrag) {
                 const bedrag = getTextValue(prijs.bedrag);
+                console.log('Found bedrag:', bedrag);
                 if (bedrag) {
                   return parseFloat(bedrag.toString().replace(/\./g, '').replace(',', '.')) || 0;
                 }
               }
-            } else if (typeof prijzen === 'string' || typeof prijzen === 'number') {
-              return parseFloat(prijzen.toString().replace(/\./g, '').replace(',', '.')) || 0;
             }
           }
         }
@@ -170,7 +251,8 @@ export default async function handler(req, res) {
       const price = getPrice();
       console.log('Extracted price:', price);
 
-      // Parse mileage safely (handles <tellerstand eenheid="K"></tellerstand>)
+      // Parse mileage safely (handles <tellerstand eenheid="K">125000</tellerstand>)
+      console.log('Raw tellerstand data:', JSON.stringify(data.tellerstand));
       const mileageRaw = getTextValue(data.tellerstand);
       const mileage = mileageRaw ? parseInt(mileageRaw) : 0;
       console.log('Extracted mileage:', mileage);
@@ -178,14 +260,44 @@ export default async function handler(req, res) {
       // Year
       const year = parseInt(data.bouwjaar) || 0;
 
-      // Images - handle <afbeeldingen><afbeelding url="..."/></afbeeldingen>
+      // Images - handle multiple XML structures
+      // Structure 1: <afbeeldingen><afbeelding url="..."/></afbeeldingen>
+      // Structure 2: <afbeeldingen><afbeelding>URL</afbeelding></afbeeldingen>
+      // Structure 3: <foto's><foto url="..."/></foto's>
       let imageUrls = '';
+      console.log('=== IMAGE EXTRACTION DEBUG ===');
+      console.log('data.afbeeldingen:', JSON.stringify(data.afbeeldingen));
+      console.log('data.fotos:', JSON.stringify(data.fotos));
+
+      // Try afbeeldingen first
       if (data.afbeeldingen && data.afbeeldingen.afbeelding) {
         const imgs = Array.isArray(data.afbeeldingen.afbeelding)
           ? data.afbeeldingen.afbeelding
           : [data.afbeeldingen.afbeelding];
 
-        // Extract URLs from attributes or text content
+        console.log('Found afbeelding elements:', imgs.length);
+        console.log('First image raw:', JSON.stringify(imgs[0]));
+
+        imageUrls = imgs
+          .map(img => {
+            if (typeof img === 'string') return img;
+            // Try different attribute names
+            if (img['@_url']) return img['@_url'];
+            if (img['@_URL']) return img['@_URL'];
+            if (img['#text']) return img['#text'];
+            if (img.url) return getTextValue(img.url);
+            return null;
+          })
+          .filter(Boolean)
+          .join(',');
+      }
+
+      // Try fotos if afbeeldingen didn't work
+      if (!imageUrls && data.fotos && data.fotos.foto) {
+        const imgs = Array.isArray(data.fotos.foto)
+          ? data.fotos.foto
+          : [data.fotos.foto];
+
         imageUrls = imgs
           .map(img => {
             if (typeof img === 'string') return img;
@@ -196,7 +308,8 @@ export default async function handler(req, res) {
           .filter(Boolean)
           .join(',');
       }
-      console.log('Image URLs count:', imageUrls ? imageUrls.split(',').length : 0);
+      console.log('Final image URLs:', imageUrls);
+      console.log('Image count:', imageUrls ? imageUrls.split(',').length : 0);
 
       // Categories Logic (Auto-tagging)
       const categories = [];
@@ -218,25 +331,111 @@ export default async function handler(req, res) {
       // Mark as "Recent" if newer than 2 years
       if (year >= new Date().getFullYear() - 2) categories.push('Recent');
 
-      // Extract accessories/options from accessoires element
+      // Extract accessories/options - handle multiple XML structures
+      console.log('=== OPTIONS EXTRACTION DEBUG ===');
+      console.log('data.accessoires:', JSON.stringify(data.accessoires));
+
       let options = [];
-      if (data.accessoires && data.accessoires.accessoire) {
-        const accs = Array.isArray(data.accessoires.accessoire)
-          ? data.accessoires.accessoire
-          : [data.accessoires.accessoire];
+      if (data.accessoires) {
+        // Structure 1: <accessoires><accessoire><naam>...</naam></accessoire></accessoires>
+        // Structure 2: <accessoires><accessoire>Name</accessoire></accessoires>
+        // Structure 3: <accessoires><standaard><accessoire>...</accessoire></standaard><optioneel>...</optioneel></accessoires>
+
+        let accs = [];
+
+        // Check for direct accessoire elements
+        if (data.accessoires.accessoire) {
+          accs = Array.isArray(data.accessoires.accessoire)
+            ? data.accessoires.accessoire
+            : [data.accessoires.accessoire];
+        }
+
+        // Also check for standaard/optioneel categories
+        if (data.accessoires.standaard && data.accessoires.standaard.accessoire) {
+          const standaard = Array.isArray(data.accessoires.standaard.accessoire)
+            ? data.accessoires.standaard.accessoire
+            : [data.accessoires.standaard.accessoire];
+          accs = [...accs, ...standaard];
+        }
+
+        if (data.accessoires.optioneel && data.accessoires.optioneel.accessoire) {
+          const optioneel = Array.isArray(data.accessoires.optioneel.accessoire)
+            ? data.accessoires.optioneel.accessoire
+            : [data.accessoires.optioneel.accessoire];
+          accs = [...accs, ...optioneel];
+        }
+
+        console.log('Found accessoire elements:', accs.length);
+        if (accs.length > 0) console.log('First accessoire raw:', JSON.stringify(accs[0]));
 
         options = accs
           .map(acc => {
             if (typeof acc === 'string') return acc;
             if (acc.naam) return getTextValue(acc.naam);
+            if (acc['#text']) return acc['#text'];
             return null;
           })
           .filter(Boolean);
       }
-      console.log('Options count:', options.length);
+      console.log('Options extracted:', options.length, options.slice(0, 5));
 
-      // Build vehicle data object - only include fields that exist in database
-      // Verified columns: hexon_nr, make, model, price, year, mileage, fuel_type, transmission, image_urls, categories, options, status
+      // Debug color fields
+      console.log('=== COLOR EXTRACTION DEBUG ===');
+      console.log('data.basiskleur:', JSON.stringify(data.basiskleur));
+      console.log('data.kleur:', JSON.stringify(data.kleur));
+      console.log('data.laksoort:', JSON.stringify(data.laksoort));
+      console.log('data.basisinterieurkleur:', JSON.stringify(data.basisinterieurkleur));
+      console.log('data.interieurkleur:', JSON.stringify(data.interieurkleur));
+      console.log('data.bekleding:', JSON.stringify(data.bekleding));
+
+      // Extract colors with fallbacks - combine with paint type for full description
+      const baseColor = getTextValue(data.basiskleur) || getTextValue(data.kleur) || null;
+      const paintType = getTextValue(data.laksoort) || null;
+      // Combine color with paint type (e.g., "Zwart Metallic")
+      let exteriorColor = baseColor;
+      if (baseColor && paintType) {
+        // Capitalize first letter of color
+        const capitalizedColor = baseColor.charAt(0).toUpperCase() + baseColor.slice(1).toLowerCase();
+        const capitalizedPaint = paintType.charAt(0).toUpperCase() + paintType.slice(1).toLowerCase();
+        exteriorColor = `${capitalizedColor} ${capitalizedPaint}`;
+      } else if (baseColor) {
+        exteriorColor = baseColor.charAt(0).toUpperCase() + baseColor.slice(1).toLowerCase();
+      }
+
+      const interiorColor = getTextValue(data.basisinterieurkleur) || getTextValue(data.interieurkleur) || null;
+
+      console.log('Extracted exterior color:', exteriorColor);
+      console.log('Extracted interior color:', interiorColor);
+
+      // Map fuel codes to full Dutch names
+      const fuelMap = {
+        'D': 'Diesel',
+        'B': 'Benzine',
+        'E': 'Elektrisch',
+        'H': 'Hybride',
+        'L': 'LPG',
+        'C': 'CNG',
+        'W': 'Waterstof',
+        'P': 'Plug-in Hybride'
+      };
+      const fuelCode = getTextValue(data.brandstof) || '';
+      const fuelType = fuelMap[fuelCode.toUpperCase()] || fuelCode || null;
+
+      // Map transmission codes to full Dutch names
+      const transmissionMap = {
+        'A': 'Automaat',
+        'H': 'Handgeschakeld',
+        'S': 'Semi-automaat',
+        'V': 'CVT'
+      };
+      const transCode = getTextValue(data.transmissie) || '';
+      const transmissionType = transmissionMap[transCode.toUpperCase()] || transCode || null;
+
+      console.log('Fuel code:', fuelCode, '→', fuelType);
+      console.log('Transmission code:', transCode, '→', transmissionType);
+
+      // Build vehicle data object - CORE FIELDS ONLY (existing columns)
+      // Extended fields require running the ALTER TABLE SQL first!
       const vehicleData = {
         hexon_nr: hexonNr,
         make: getTextValue(data.merk) || null,
@@ -244,13 +443,77 @@ export default async function handler(req, res) {
         price: price,
         year: year,
         mileage: mileage,
-        fuel_type: fuel || null,
-        transmission: getTextValue(data.transmissie) || null,
+        fuel_type: fuelType,
+        transmission: transmissionType,
         image_urls: imageUrls,
-        categories: categories,
-        options: options,
         status: 'active',
+        // Extended fields - uncomment after running ALTER TABLE SQL:
+        variant: getTextValue(data.type) || null,
+        model_year: parseInt(getTextValue(data.modeljaar)) || year,
+        first_registration: getTextValue(data.datum_deel_1) || null,
+        construction_date: getTextValue(data.constructiedatum) || null,
+        vehicle_type: getTextValue(data.voertuigsoort) || null,
+        body_type: bodyType,
+        doors: parseInt(getTextValue(data.aantal_deuren)) || null,
+        seats: parseInt(getTextValue(data.aantal_zitplaatsen)) || null,
+        color: exteriorColor,
+        color_code: getTextValue(data.kleurcode) || null,
+        paint_type: getTextValue(data.laksoort) || null,
+        interior_color: interiorColor,
+        upholstery: getTextValue(data.bekleding) || null,
+        gears: parseInt(getTextValue(data.aantal_versnellingen)) || null,
+        engine_cc: parseInt(getTextValue(data.cilinder_inhoud)) || null,
+        cylinders: parseInt(getTextValue(data.cilinder_aantal)) || null,
+        horsepower: parseInt(getTextValue(data.vermogen_motor_pk)) || null,
+        kw_power: parseInt(getTextValue(data.vermogen_motor_kw)) || null,
+        torque: parseInt(getTextValue(data.koppel)) || null,
+        top_speed: parseInt(getTextValue(data.topsnelheid)) || null,
+        acceleration: parseFloat(getTextValue(data.acceleratie)?.replace(',', '.')) || null,
+        fuel_city: parseFloat(getTextValue(data.verbruik_stad)?.replace(',', '.')) || null,
+        fuel_highway: parseFloat(getTextValue(data.verbruik_snelweg)?.replace(',', '.')) || null,
+        fuel_combined: parseFloat(getTextValue(data.gemiddeld_verbruik)?.replace(',', '.')) || null,
+        fuel_range: parseInt(getTextValue(data.actieradius)) || null,
+        co2_emission: parseInt(getTextValue(data.co2_uitstoot)) || null,
+        energy_label: getTextValue(data.energielabel) || null,
+        emission_class: getTextValue(data.emissieklasse) || null,
+        particulate_filter: getTextValue(data.roetfilter) === 'J' ? true : (getTextValue(data.roetfilter) === 'N' ? false : null),
+        weight: parseInt(getTextValue(data.massa)) || null,
+        max_weight: parseInt(getTextValue(data.max_massa)) || null,
+        payload: parseInt(getTextValue(data.laadvermogen)) || null,
+        tow_weight_braked: parseInt(getTextValue(data.max_trekgewicht_geremd)) || null,
+        tow_weight_unbraked: parseInt(getTextValue(data.max_trekgewicht_ongeremd)) || null,
+        wheelbase: parseInt(getTextValue(data.wielbasis)) || null,
+        length: parseInt(getTextValue(data.lengte)) || null,
+        width: parseInt(getTextValue(data.breedte)) || null,
+        height: parseInt(getTextValue(data.hoogte)) || null,
+        license_plate: getTextValue(data.kenteken) || null,
+        vin: getTextValue(data.vin) || getTextValue(data.chassisnr) || null,
+        btw_marge: getTextValue(data.btw_marge) || null,
+        is_new: getTextValue(data.nieuw_voertuig) === 'j' || getTextValue(data.nieuw_voertuig) === 'J',
+        apk_until: getTextValue(data.apk?.['@_tot']) || null,
+        warranty_months: parseInt(getTextValue(data.garantie_maanden)) || null,
+        warranty_km: parseInt(getTextValue(data.garantie_km)) || null,
+        previous_owners: parseInt(getTextValue(data.aantal_eigenaren)) || null,
+        options: options,
+        categories: categories,
+        description: getTextValue(data.opmerkingen) || null,
       };
+
+      console.log('=== EXTRACTED DATA SUMMARY ===');
+      console.log('Make:', vehicleData.make);
+      console.log('Model:', vehicleData.model);
+      console.log('Variant:', vehicleData.variant);
+      console.log('Price:', vehicleData.price);
+      console.log('Year:', vehicleData.year);
+      console.log('Mileage:', vehicleData.mileage);
+      console.log('Color:', vehicleData.color);
+      console.log('Interior:', vehicleData.interior_color);
+      console.log('Upholstery:', vehicleData.upholstery);
+      console.log('Horsepower:', vehicleData.horsepower);
+      console.log('Fuel Combined:', vehicleData.fuel_combined);
+      console.log('Image URLs:', vehicleData.image_urls ? vehicleData.image_urls.substring(0, 100) : 'NONE');
+      console.log('Options count:', options.length);
+      console.log('Categories:', vehicleData.categories);
 
       console.log('Vehicle data to save:', JSON.stringify(vehicleData, null, 2));
 

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCars } from '../context/CarContext.tsx';
@@ -31,13 +31,7 @@ const Collection: React.FC = () => {
     const inStockCars = cars.filter(car => !car.is_archived);
     const stockCount = inStockCars.length;
 
-    // Start slider at the right position (one step left from far right)
-    useEffect(() => {
-        if (scrollRef.current) {
-            // Scroll to far right minus one card width (460px) - exactly like pressing left arrow once
-            scrollRef.current.scrollLeft = scrollRef.current.scrollWidth - scrollRef.current.clientWidth - 460;
-        }
-    }, [inStockCars]);
+
 
     const scroll = (direction: 'left' | 'right') => {
         if (scrollRef.current) {

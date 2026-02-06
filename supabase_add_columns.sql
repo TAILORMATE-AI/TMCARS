@@ -76,5 +76,8 @@ ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS options JSONB DEFAULT '[]'::JSONB;
 ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS categories JSONB DEFAULT '[]'::JSONB;
 ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS description TEXT;
 
+-- Sold Vehicles Tracking
+ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS sold_at TIMESTAMPTZ;
+
 -- Done! Verify with:
 -- SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'vehicles' ORDER BY ordinal_position;

@@ -133,28 +133,29 @@ const cardGridItemVariants: Variants = {
 // --- CAR CARD COMPONENT ---
 const CarCard: React.FC<{ car: Car }> = ({ car }) => {
   const navigate = useNavigate();
+  const isSold = car.is_sold;
 
   return (
     <motion.div
       layout
       variants={cardGridItemVariants}
-      className={`relative group border transition-all duration-300 aspect-[4/3] lg:col-span-4 ${car.is_sold ? 'border-white/5 opacity-80' : 'border-white/10 hover:border-white/30'}`}
+      className={`relative group border transition-all duration-300 aspect-[4/3] lg:col-span-4 ${isSold ? 'border-white/5 opacity-80' : 'border-white/10 hover:border-white/30'}`}
     >
       <motion.div
-        className="relative bg-[#030303]/60 group-hover:bg-[#030303]/80 backdrop-blur-[20px] h-full transition-colors duration-500 cursor-pointer overflow-hidden rounded-none z-10"
-        onClick={() => navigate(`/collectie/${car.id}`)}
-        whileTap="tap"
-        variants={{ tap: { scale: 0.97 } }}
+        className={`relative bg-[#030303]/60 ${!isSold ? 'group-hover:bg-[#030303]/80 cursor-pointer' : ''} backdrop-blur-[20px] h-full transition-colors duration-500 overflow-hidden rounded-none z-10`}
+        onClick={!isSold ? () => navigate(`/collectie/${car.id}`) : undefined}
+        whileTap={!isSold ? "tap" : undefined}
+        variants={!isSold ? { tap: { scale: 0.97 } } : undefined}
         transition={{ duration: 0.3, ease: 'easeOut' }}
       >
         {/* Image */}
         <div className="absolute inset-0 z-0">
-          <img src={car.image} alt={`${car.make} ${car.model}`} className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${car.is_sold ? 'grayscale-[0.5]' : ''}`} />
+          <img src={car.image} alt={`${car.make} ${car.model}`} className={`w-full h-full object-cover transition-transform duration-500 ${!isSold ? 'group-hover:scale-105' : 'grayscale-[0.5]'}`} />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,black)] opacity-40 pointer-events-none"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300"></div>
 
           {/* SOLD OVERLAY */}
-          {car.is_sold && (
+          {isSold && (
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-20">
               <div className="border-y-2 border-white/50 bg-black/50 px-8 py-2 transform -rotate-12 backdrop-blur-md">
                 <span className="text-2xl font-bold text-white uppercase tracking-[0.3em] drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
@@ -170,7 +171,7 @@ const CarCard: React.FC<{ car: Car }> = ({ car }) => {
           <span className="bg-black/40 backdrop-blur-md px-3 py-1 text-white text-[10px] font-bold uppercase tracking-widest border border-white/10 rounded-none">
             <FormatMixed text={car.year} />
           </span>
-          {car.categories.includes('Recent') && !car.is_sold && (
+          {car.categories.includes('Recent') && !isSold && (
             <span className="bg-white text-black px-3 py-1 text-[10px] font-bold uppercase tracking-widest border border-white shadow-[0_0_10px_rgba(255,255,255,0.4)] rounded-none">
               NIEUW
             </span>
@@ -184,7 +185,7 @@ const CarCard: React.FC<{ car: Car }> = ({ car }) => {
               <h3 className="text-2xl font-bold text-white uppercase tracking-wider">{car.make} <span className="font-semibold normal-case text-gray-200">{car.model}</span></h3>
             </div>
             <div className="text-right">
-              <p className={`text-xl font-bold ${car.is_sold ? 'text-gray-400 line-through decoration-white/50' : 'text-white'}`}>
+              <p className={`text-xl font-bold ${isSold ? 'text-gray-400 line-through decoration-white/50' : 'text-white'}`}>
                 <FormatMixed text={car.price} />
               </p>
             </div>

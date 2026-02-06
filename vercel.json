@@ -7,7 +7,10 @@
     ],
     "functions": {
         "api/mobilox-import.js": {
-            "maxDuration": 10
+            "maxDuration": 30
+        },
+        "api/cleanup-sold.js": {
+            "maxDuration": 60
         }
     }
 }

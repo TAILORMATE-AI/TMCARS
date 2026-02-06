@@ -251,7 +251,7 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
 
   return (
     <>
-      <div className="min-h-screen bg-[#020202] text-white pt-24 pb-12 font-sans selection:bg-white selection:text-black">
+      <div className="min-h-screen bg-gradient-to-b from-[#0a0a0a] via-[#050505] to-[#020202] text-white pt-24 pb-12 font-sans selection:bg-white selection:text-black">
 
         {/* Breadcrumb / Back Navigation */}
         <div className="max-w-[1400px] mx-auto px-6 mb-8">
@@ -276,7 +276,7 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
               <img
                 src={galleryImages[0]}
                 alt={`${car.make} ${car.model}`}
-                className={`w-full h-full object-contain transition-transform duration-700 group-hover:scale-105 ${car.is_sold ? 'grayscale-[0.5]' : ''}`}
+                className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${car.is_sold ? 'grayscale-[0.5]' : ''}`}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
                 <ZoomIn className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-md" size={48} />
@@ -401,17 +401,6 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
                       </div>
                     </div>
                   )}
-                </div>
-
-                {/* Description / Expert Tip */}
-                <div className="bg-[#0A0A0A] border border-white/10 p-6 mb-8 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-white/5 blur-2xl rounded-full -mr-10 -mt-10"></div>
-                  <h3 className="text-xs font-bold text-white uppercase tracking-widest mb-3 border-b border-white/10 pb-3 inline-block">
-                    Expert's Note
-                  </h3>
-                  <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-line font-light">
-                    {description}
-                  </p>
                 </div>
 
                 {/* Technical Specifications - Simple Table */}
