@@ -122,7 +122,7 @@ const Collection: React.FC = () => {
                                     <img
                                         src={car.image}
                                         alt={`${car.make} ${car.model}`}
-                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                        className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${car.is_sold ? 'grayscale-[0.5]' : ''}`}
                                         onError={(e) => {
                                             const target = e.target as HTMLImageElement;
                                             target.style.display = 'none';
@@ -131,6 +131,17 @@ const Collection: React.FC = () => {
                                     />
                                     {/* Subtle vignette for depth */}
                                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_50%,black)] opacity-20 pointer-events-none z-10"></div>
+
+                                    {/* SOLD OVERLAY */}
+                                    {car.is_sold && (
+                                        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-30">
+                                            <div className="border-y-2 border-white/50 bg-black/50 px-6 py-1.5 transform -rotate-12 backdrop-blur-md">
+                                                <span className="text-xl font-bold text-white uppercase tracking-[0.3em] drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+                                                    Verkocht
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Details Below Image - UPDATED LAYOUT */}
@@ -152,12 +163,14 @@ const Collection: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        {/* Right Side: Price - Strictly aligned */}
-                                        <div className="flex-shrink-0 text-right pt-1">
-                                            <p className="text-lg md:text-xl font-bold text-white tracking-wide whitespace-nowrap">
-                                                <FormatMixed text={car.price} />
-                                            </p>
-                                        </div>
+                                        {/* Right Side: Price - Only show if not sold */}
+                                        {!car.is_sold && (
+                                            <div className="flex-shrink-0 text-right pt-1">
+                                                <p className="text-lg md:text-xl font-bold text-white tracking-wide whitespace-nowrap">
+                                                    <FormatMixed text={car.price} />
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </motion.div>
