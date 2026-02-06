@@ -31,11 +31,14 @@ const Collection: React.FC = () => {
     const inStockCars = cars.filter(car => !car.is_archived);
     const stockCount = inStockCars.length;
 
-    // Always start scroll at left (content is reversed, so this shows rightmost/newest cars)
+    // Start scroll at right side (so you swipe left to see newest)
     useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollLeft = 0;
-        }
+        const timer = setTimeout(() => {
+            if (scrollRef.current) {
+                scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+            }
+        }, 150);
+        return () => clearTimeout(timer);
     }, [inStockCars]);
 
 
@@ -105,7 +108,7 @@ const Collection: React.FC = () => {
                         scrollPaddingLeft: 'max(1.5rem, calc((100vw - 1400px) / 2 + 1.5rem))'
                     }}
                 >
-                    <div className="flex flex-row-reverse space-x-6 space-x-reverse w-max items-stretch">
+                    <div className="flex space-x-6 w-max items-stretch">
                         {inStockCars.map((car, index) => (
                             <motion.div
                                 key={car.id}
