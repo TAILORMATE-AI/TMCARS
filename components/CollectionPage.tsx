@@ -190,7 +190,17 @@ const CarCard: React.FC<{ car: Car, onSoldClick?: (car: Car) => void }> = ({ car
         <div className="absolute bottom-0 left-0 right-0 p-8 z-30">
           <div className="flex justify-between items-end">
             <div>
-              <h3 className="text-2xl font-bold text-white uppercase tracking-wider">{car.make} <span className="font-semibold normal-case text-gray-200">{car.model}</span></h3>
+              <h3 className="text-2xl font-bold text-white uppercase tracking-wider">
+                {car.make}{' '}
+                <span className="font-semibold normal-case text-gray-200">
+                  {car.model.split(' ')[0]}
+                </span>
+                {car.model.split(' ').length > 1 && (
+                  <span className="text-sm font-normal normal-case text-gray-400 ml-2">
+                    {car.model.split(' ').slice(1).join(' ')}
+                  </span>
+                )}
+              </h3>
             </div>
             {!isSold && (
               <div className="text-right">

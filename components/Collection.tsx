@@ -102,11 +102,10 @@ const Collection: React.FC = () => {
                     ref={scrollRef}
                     className="w-full overflow-x-auto no-scrollbar pb-10 snap-x snap-mandatory scroll-smooth pl-6 pr-6 md:pl-[max(1.5rem,calc((100vw-1400px)/2+1.5rem))] md:pr-[max(1.5rem,calc((100vw-1400px)/2+1.5rem))]"
                     style={{
-                        scrollPaddingLeft: 'max(1.5rem, calc((100vw - 1400px) / 2 + 1.5rem))',
-                        direction: 'rtl'
+                        scrollPaddingLeft: 'max(1.5rem, calc((100vw - 1400px) / 2 + 1.5rem))'
                     }}
                 >
-                    <div className="flex space-x-6 w-max items-stretch" style={{ direction: 'ltr' }}>
+                    <div className="flex space-x-6 w-max items-stretch">
                         {inStockCars.map((car, index) => (
                             <motion.div
                                 key={car.id}
@@ -151,8 +150,14 @@ const Collection: React.FC = () => {
 
                                         {/* Left Side: Title & Specs */}
                                         <div className="flex flex-col flex-grow min-w-0">
-                                            <h3 className="text-xl md:text-2xl font-bold text-white uppercase tracking-wider leading-tight group-hover:text-gray-200 transition-colors truncate">
-                                                {car.make} <span className="font-semibold text-gray-400 block md:inline">{car.model}</span>
+                                            <h3 className="text-xl md:text-2xl font-bold text-white uppercase tracking-wider leading-tight group-hover:text-gray-200 transition-colors">
+                                                {car.make}{' '}
+                                                <span className="font-semibold text-gray-400">{car.model.split(' ')[0]}</span>
+                                                {car.model.split(' ').length > 1 && (
+                                                    <span className="text-xs md:text-sm font-normal text-gray-500 ml-1 block md:inline">
+                                                        {car.model.split(' ').slice(1).join(' ')}
+                                                    </span>
+                                                )}
                                             </h3>
 
                                             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 text-[10px] md:text-xs text-gray-500 uppercase tracking-[0.2em] font-medium">

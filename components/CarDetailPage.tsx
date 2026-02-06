@@ -251,7 +251,7 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-b from-[#0a0a0a] via-[#050505] to-[#020202] text-white pt-24 pb-12 font-sans selection:bg-white selection:text-black">
+      <div className="min-h-screen bg-gradient-to-b from-[#0a0a0a] via-[#050505] to-[#020202] text-white pt-24 pb-12 font-sans selection:bg-white selection:text-black overflow-x-hidden">
 
         {/* Breadcrumb / Back Navigation */}
         <div className="max-w-[1400px] mx-auto px-6 mb-8">
@@ -265,6 +265,18 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
 
           {/* LEFT COLUMN: Images (7/12) */}
           <div className="lg:col-span-7 space-y-4">
+
+            {/* Mobile-only Title - shows above photos on mobile */}
+            <div className="lg:hidden mb-4">
+              <h4 className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-2">{car.make}</h4>
+              <h1 className="text-2xl font-bold text-white uppercase tracking-wider mb-4 leading-tight break-words">
+                {car.model}
+              </h1>
+              <div className="text-2xl font-light text-white border-b border-white/10 pb-6">
+                <FormatMixed text={car.price} />
+              </div>
+            </div>
+
             {/* Main Hero Image */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -319,40 +331,43 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
           <div className="lg:col-span-5 relative">
             <div className="sticky top-32 space-y-8">
 
-              {/* Header Info */}
+              {/* Header Info - Title hidden on mobile (shown above photos), rest stays */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <h4 className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-2">{car.make}</h4>
-                <h1 className="text-3xl md:text-5xl font-bold text-white uppercase tracking-wider mb-4 leading-tight">
-                  {car.model}
-                </h1>
-                <div className="text-3xl font-light text-white border-b border-white/10 pb-6 mb-6">
-                  <FormatMixed text={car.price} />
-                  <span className="text-sm text-gray-500 ml-4 align-middle tracking-normal font-normal opacity-0 font-sans">BTW Inclusief</span>
+                {/* Title - hidden on mobile */}
+                <div className="hidden lg:block overflow-hidden">
+                  <h4 className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-2">{car.make}</h4>
+                  <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-white uppercase tracking-wider mb-4 leading-tight break-words">
+                    {car.model}
+                  </h1>
+                  <div className="text-3xl font-light text-white border-b border-white/10 pb-6 mb-6">
+                    <FormatMixed text={car.price} />
+                    <span className="text-sm text-gray-500 ml-4 align-middle tracking-normal font-normal opacity-0 font-sans">BTW Inclusief</span>
+                  </div>
                 </div>
 
                 {/* Quick Specs Grid */}
-                <div className="grid grid-cols-2 gap-y-6 gap-x-4 mb-8">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white/5 rounded-none border border-white/5">
+                <div className="grid grid-cols-2 gap-y-6 gap-x-4 mb-8 overflow-hidden">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2 bg-white/5 rounded-none border border-white/5 flex-shrink-0">
                       <Calendar size={18} className="text-gray-300" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <span className="block text-[10px] text-gray-500 uppercase tracking-widest">Bouwjaar</span>
                       <span className="text-sm font-bold text-white">{car.year}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white/5 rounded-none border border-white/5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2 bg-white/5 rounded-none border border-white/5 flex-shrink-0">
                       <Gauge size={18} className="text-gray-300" />
                     </div>
-                    <div>
-                      <span className="block text-[10px] text-gray-500 uppercase tracking-widest">Kilometerstand</span>
-                      <span className="text-sm font-bold text-white">{car.mileage}</span>
+                    <div className="min-w-0">
+                      <span className="block text-[10px] text-gray-500 uppercase tracking-widest truncate">Kilometerstand</span>
+                      <span className="text-sm font-bold text-white truncate block">{car.mileage}</span>
                     </div>
                   </div>
 
