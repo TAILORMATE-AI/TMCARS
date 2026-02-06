@@ -31,14 +31,11 @@ const Collection: React.FC = () => {
     const inStockCars = cars.filter(car => !car.is_archived);
     const stockCount = inStockCars.length;
 
-    // Start scroll at right side (so you swipe left to see newest)
+    // With RTL direction, scrollLeft=0 shows rightmost content (cars aligned right)
     useEffect(() => {
-        const timer = setTimeout(() => {
-            if (scrollRef.current) {
-                scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
-            }
-        }, 150);
-        return () => clearTimeout(timer);
+        if (scrollRef.current) {
+            scrollRef.current.scrollLeft = 0;
+        }
     }, [inStockCars]);
 
 
@@ -105,10 +102,11 @@ const Collection: React.FC = () => {
                     ref={scrollRef}
                     className="w-full overflow-x-auto no-scrollbar pb-10 snap-x snap-mandatory scroll-smooth pl-6 pr-6 md:pl-[max(1.5rem,calc((100vw-1400px)/2+1.5rem))] md:pr-[max(1.5rem,calc((100vw-1400px)/2+1.5rem))]"
                     style={{
-                        scrollPaddingLeft: 'max(1.5rem, calc((100vw - 1400px) / 2 + 1.5rem))'
+                        scrollPaddingLeft: 'max(1.5rem, calc((100vw - 1400px) / 2 + 1.5rem))',
+                        direction: 'rtl'
                     }}
                 >
-                    <div className="flex space-x-6 w-max items-stretch">
+                    <div className="flex space-x-6 w-max items-stretch" style={{ direction: 'ltr' }}>
                         {inStockCars.map((car, index) => (
                             <motion.div
                                 key={car.id}
