@@ -123,9 +123,9 @@ const Navbar: React.FC<NavbarProps> = ({ isLoading = false }) => {
       className={`fixed top-0 left-0 right-0 z-50 h-24 flex items-center transition-all duration-500 ease-in-out border-none outline-none ${isScrolled
         ? 'bg-black/60 backdrop-blur-xl shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
         : 'bg-transparent'
-        }`}
+        } px-6`}
     >
-      <div className="max-w-[1400px] w-full mx-auto px-6 flex justify-between items-center h-full">
+      <div className="max-w-[1400px] w-full mx-auto flex justify-between items-center h-full">
 
         {/* Logo - Fade In */}
         <motion.div
@@ -140,7 +140,7 @@ const Navbar: React.FC<NavbarProps> = ({ isLoading = false }) => {
             className="block group"
           >
             <img
-              src="https://tailormate.ai/tmcars/images/tmcarslogowit.png"
+              src="https://zabrdslxbnfhcnqxbvzz.supabase.co/storage/v1/object/public/images/tmcarslogo.webp"
               alt="TM CARS"
               className="h-10 md:h-12 object-contain drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] transition-transform duration-300 group-hover:scale-105"
             />
@@ -154,10 +154,11 @@ const Navbar: React.FC<NavbarProps> = ({ isLoading = false }) => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="hidden lg:flex items-center space-x-10"
+              className="hidden lg:flex items-center space-x-6 xl:space-x-10"
             >
               <NavItem label="Aanbod" to="/collectie" isActive={location.pathname.startsWith('/collectie')} />
               <NavItem label="Verkopen" to="/verkopen" isActive={location.pathname === '/verkopen'} />
+              <NavItem label="Onderhoud" to="/onderhoud" isActive={location.pathname === '/onderhoud'} />
               <NavItem label="Over Ons" onClick={() => handleNavigation('/', 'onze-aanpak')} isActive={false} />
               <NavItem label="Contact" to="/contact" isActive={location.pathname === '/contact'} />
 
@@ -166,19 +167,19 @@ const Navbar: React.FC<NavbarProps> = ({ isLoading = false }) => {
                 <div className="relative">
                   {/* 1. Outer Border Layer */}
                   <div
-                    className="absolute inset-0 bg-white/30 transition-colors duration-300 group-hover:bg-white"
+                    className="absolute inset-0 bg-white/30 transition-colors duration-500 ease-out group-hover:bg-white"
                     style={{ clipPath: clipPathValue }}
                   />
 
                   {/* 2. Inner Background Layer - solid color, no blur */}
                   <div
-                    className="absolute inset-[1px] bg-[#1a1a1a] transition-colors duration-300 group-hover:bg-white"
+                    className="absolute inset-[1px] bg-[#1a1a1a] transition-colors duration-500 ease-out group-hover:bg-white"
                     style={{ clipPath: clipPathValue }}
                   />
 
                   {/* 3. Text Content Layer */}
                   <div className="relative px-6 py-3 z-10 flex items-center justify-center">
-                    <span className="text-[10px] font-bold text-white tracking-[0.2em] uppercase select-none transition-colors duration-300 group-hover:text-black">
+                    <span className="text-xs font-bold text-white tracking-[0.2em] uppercase select-none transition-colors duration-500 ease-out group-hover:text-black">
                       Afspraak Maken
                     </span>
                   </div>
@@ -194,7 +195,7 @@ const Navbar: React.FC<NavbarProps> = ({ isLoading = false }) => {
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="lg:hidden text-white p-2 z-[202] hover:bg-white/10 rounded-full transition-colors"
+              className="lg:hidden text-white p-2 z-[202] hover:bg-white/10 rounded-full transition-colors -mr-2"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label={isMobileMenuOpen ? "Sluit menu" : "Open menu"}
             >
@@ -216,6 +217,7 @@ const Navbar: React.FC<NavbarProps> = ({ isLoading = false }) => {
             <div className="flex flex-col space-y-8 p-6 text-center">
               <MobileNavItem to="/collectie" label="Aanbod" onClick={() => setIsMobileMenuOpen(false)} />
               <MobileNavItem to="/verkopen" label="Verkopen" onClick={() => setIsMobileMenuOpen(false)} />
+              <MobileNavItem to="/onderhoud" label="Onderhoud" onClick={() => setIsMobileMenuOpen(false)} />
               <MobileNavItem label="Over Ons" onClick={() => handleNavigation('/', 'onze-aanpak')} />
               <MobileNavItem to="/contact" label="Contact" onClick={() => setIsMobileMenuOpen(false)} />
 
@@ -227,19 +229,19 @@ const Navbar: React.FC<NavbarProps> = ({ isLoading = false }) => {
                 <div className="relative">
                   {/* 1. Outer Border Layer */}
                   <div
-                    className="absolute inset-0 bg-white/30 transition-colors duration-300 group-hover:bg-white"
+                    className="absolute inset-0 bg-white/30 transition-colors duration-500 ease-out group-hover:bg-white"
                     style={{ clipPath: clipPathValue }}
                   />
 
                   {/* 2. Inner Background Layer - solid color, no blur */}
                   <div
-                    className="absolute inset-[1px] bg-[#1a1a1a] transition-colors duration-300 group-hover:bg-white"
+                    className="absolute inset-[1px] bg-[#1a1a1a] transition-colors duration-500 ease-out group-hover:bg-white"
                     style={{ clipPath: clipPathValue }}
                   />
 
                   {/* 3. Text Content Layer */}
                   <div className="relative px-12 py-4 z-10 flex items-center justify-center">
-                    <span className="text-xl font-bold text-white tracking-[0.2em] uppercase select-none transition-colors duration-300 group-hover:text-black">
+                    <span className="text-xl font-bold text-white tracking-[0.2em] uppercase select-none transition-colors duration-500 ease-out group-hover:text-black">
                       Afspraak Maken
                     </span>
                   </div>

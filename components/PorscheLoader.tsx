@@ -108,7 +108,7 @@ const PorscheLoader: React.FC<{ onComplete?: () => void }> = ({ onComplete }) =>
             layoutId="loaderBar"
           />
         </div>
-        <div className="flex justify-between w-full text-[9px] uppercase tracking-[0.3em] text-gray-500 font-medium">
+        <div className="flex justify-between w-full text-xs uppercase tracking-[0.3em] text-gray-500 font-medium">
           <span>TM Cars</span>
           <span>{Math.round(progress)}%</span>
         </div>

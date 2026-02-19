@@ -7,10 +7,11 @@ import ContactPage from './components/ContactPage.tsx';
 import AppointmentPage from './components/AppointmentPage.tsx';
 import CollectionPage from './components/CollectionPage.tsx';
 import CarDetailPage from './components/CarDetailPage.tsx';
-import ServicesPage from './components/ServicesPage.tsx';
+
 import SellingPage from './components/SellingPage.tsx';
 import AdminDashboard from './components/AdminDashboard.tsx';
 import PageTransition from './components/PageTransition.tsx';
+import MaintenancePage from './components/MaintenancePage.tsx';
 import { CarProvider } from './context/CarContext.tsx';
 
 function App() {
@@ -21,7 +22,7 @@ function App() {
   return (
     <CarProvider>
       <div className="min-h-screen bg-[#020202] text-white selection:bg-white selection:text-black flex flex-col relative">
-        
+
         {/* Navbar */}
         <Navbar />
 
@@ -34,7 +35,7 @@ function App() {
           className="flex flex-col min-h-screen w-full"
         >
           <main className="flex-grow w-full">
-            <AnimatePresence 
+            <AnimatePresence
               mode="wait"
               onExitComplete={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
@@ -59,12 +60,12 @@ function App() {
                     <SellingPage onOpenAdmin={handleOpenAdmin} />
                   </PageTransition>
                 } />
-                {/* Keep /diensten for backward compatibility or remove if not needed, linking to specific pages now */}
-                <Route path="/diensten" element={
+                <Route path="/onderhoud" element={
                   <PageTransition>
-                    <ServicesPage onOpenAdmin={handleOpenAdmin} />
+                    <MaintenancePage onOpenAdmin={handleOpenAdmin} />
                   </PageTransition>
                 } />
+
                 <Route path="/contact" element={
                   <PageTransition>
                     <ContactPage onOpenAdmin={handleOpenAdmin} />
@@ -79,7 +80,7 @@ function App() {
               </Routes>
             </AnimatePresence>
           </main>
-          
+
           {showAdmin && <AdminDashboard onClose={() => setShowAdmin(false)} />}
         </motion.div>
       </div>

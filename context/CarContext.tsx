@@ -21,6 +21,7 @@ interface CarContextType {
   deleteCar: (id: number) => Promise<void>;
   toggleArchive: (id: number) => Promise<void>;
   toggleSold: (id: number) => Promise<void>;
+  updateCarOrder: (orderedCars: Car[]) => Promise<void>;
 }
 
 const CarContext = createContext<CarContextType | undefined>(undefined);
@@ -62,6 +63,7 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       is_archived: record.status === 'archived',
       is_sold: record.status === 'sold',
       isNew: record.is_new || false,
+      display_order: record.display_order || 9999,
       // Content
       expertTip: '',
       description: record.description || null,
@@ -126,6 +128,7 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const { data, error } = await supabase
         .from('vehicles')
         .select('*')
+        .order('display_order', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -169,7 +172,8 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       categories: car.categories,
       body_type: car.bodyType,
       options: car.options,
-      status: car.is_archived ? 'archived' : (car.is_sold ? 'sold' : 'active')
+      status: car.is_archived ? 'archived' : (car.is_sold ? 'sold' : 'active'),
+      display_order: car.display_order || 9999
     };
 
     const { error } = await supabase.from('vehicles').insert(dbPayload);
@@ -203,7 +207,8 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       categories: updatedCar.categories,
       body_type: updatedCar.bodyType,
       options: updatedCar.options,
-      status: status
+      status: status,
+      display_order: updatedCar.display_order
     };
 
     const { error } = await supabase
@@ -265,8 +270,34 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const updateCarOrder = async (orderedCars: Car[]) => {
+    // Optimistic UI update
+    setCars(orderedCars);
+
+    // Filter to only cars that actually have an ID (mostly all of them)
+    const updates = orderedCars.map((car, index) => ({
+      id: car.id,
+      display_order: index
+    }));
+
+    try {
+      // Supabase UPSERT for bulk update
+      const { error } = await supabase
+        .from('vehicles')
+        .upsert(updates, { onConflict: 'id' });
+
+      if (error) {
+        console.error("Error updating car order in DB:", error);
+        // Refresh to revert to DB state on error
+        fetchCars();
+      }
+    } catch (err) {
+      console.error("Failed to reorder:", err);
+    }
+  };
+
   return (
-    <CarContext.Provider value={{ cars, addCar, updateCar, deleteCar, toggleArchive, toggleSold }}>
+    <CarContext.Provider value={{ cars, addCar, updateCar, deleteCar, toggleArchive, toggleSold, updateCarOrder }}>
       {children}
     </CarContext.Provider>
   );

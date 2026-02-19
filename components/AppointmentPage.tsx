@@ -111,7 +111,7 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ onOpenAdmin }) => {
     // Sort cars alphabetically: Make + Model
     const availableCars = useMemo(() => {
         return cars
-            .filter(c => !c.is_archived)
+            .filter(c => !c.is_archived && !c.is_sold)
             .sort((a, b) => {
                 const nameA = `${a.make} ${a.model}`.toLowerCase();
                 const nameB = `${b.make} ${b.model}`.toLowerCase();
@@ -265,7 +265,7 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ onOpenAdmin }) => {
 
                     {/* Progress Line */}
                     {!isSent && (
-                        <div className="w-full max-w-5xl h-[1px] bg-white/10 mb-12 relative overflow-hidden">
+                        <div className="w-full max-w-[1400px] h-[1px] bg-white/10 mb-12 relative overflow-hidden">
                             <motion.div
                                 className="absolute left-0 top-0 bottom-0 bg-white"
                                 initial={{ width: "0%" }}
@@ -349,7 +349,7 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ onOpenAdmin }) => {
                                                                 {/* Info below image */}
                                                                 <div className="flex-grow p-4 flex flex-col justify-between">
                                                                     <div>
-                                                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{car.make}</span>
+                                                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{car.make}</span>
                                                                         <h4 className={`text-base font-bold truncate transition-colors ${isSelected ? 'text-white' : 'text-gray-300 group-hover:text-white'}`}>
                                                                             {car.model}
                                                                         </h4>
@@ -414,7 +414,7 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ onOpenAdmin }) => {
                                                         </div>
                                                     </motion.button>
 
-                                                    <p className="text-gray-500 text-[10px] md:text-xs uppercase tracking-widest">
+                                                    <p className="text-gray-500 text-xs md:text-xs uppercase tracking-widest">
                                                         Heeft u een andere vraag?
                                                         <Link to="/contact" className="text-white font-bold ml-2 hover:text-gray-300 transition-colors border-b border-white/20 pb-0.5">
                                                             Neem contact op
@@ -447,7 +447,7 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ onOpenAdmin }) => {
                                                             >
                                                                 <ChevronLeft size={16} />
                                                             </button>
-                                                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
                                                                 Kies een datum
                                                             </label>
                                                             <button
@@ -494,9 +494,9 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ onOpenAdmin }) => {
                                                                                     }`}
                                                                                 style={{ clipPath: 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)' }}
                                                                             >
-                                                                                <span className="text-[8px] md:text-[10px] uppercase tracking-wider font-medium opacity-80">{dayName}</span>
+                                                                                <span className="text-[8px] md:text-xs uppercase tracking-wider font-medium opacity-80">{dayName}</span>
                                                                                 <span className="text-lg md:text-2xl font-bold">{dayNum}</span>
-                                                                                <span className="text-[7px] md:text-[9px] uppercase tracking-wider opacity-60">{month}</span>
+                                                                                <span className="text-[7px] md:text-xs uppercase tracking-wider opacity-60">{month}</span>
                                                                             </div>
                                                                         </motion.button>
                                                                     );
@@ -514,7 +514,7 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ onOpenAdmin }) => {
                                                                 exit={{ opacity: 0, height: 0 }}
                                                                 className="space-y-4 pt-4 border-t border-white/5"
                                                             >
-                                                                <label className="block text-center text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                                                                <label className="block text-center text-xs font-bold text-gray-500 uppercase tracking-widest">
                                                                     Beschikbare Uren
                                                                 </label>
 
@@ -617,7 +617,7 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ onOpenAdmin }) => {
                                                             className="w-full bg-transparent border-b border-white/20 py-3 text-white focus:outline-none focus:border-white transition-all text-center placeholder-transparent"
                                                             placeholder="Naam"
                                                         />
-                                                        <label className={`absolute left-0 right-0 text-center transition-all duration-300 pointer-events-none uppercase tracking-widest text-xs font-bold ${formData.name ? '-top-4 text-gray-500 text-[10px]' : 'top-3 text-gray-400'}`}>
+                                                        <label className={`absolute left-0 right-0 text-center transition-all duration-300 pointer-events-none uppercase tracking-widest text-xs font-bold ${formData.name ? '-top-4 text-gray-500 text-xs' : 'top-3 text-gray-400'}`}>
                                                             Uw Naam
                                                         </label>
                                                     </div>
@@ -629,7 +629,7 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ onOpenAdmin }) => {
                                                             className="w-full bg-transparent border-b border-white/20 py-3 text-white focus:outline-none focus:border-white transition-all text-center placeholder-transparent"
                                                             placeholder="Email"
                                                         />
-                                                        <label className={`absolute left-0 right-0 text-center transition-all duration-300 pointer-events-none uppercase tracking-widest text-xs font-bold ${formData.email ? '-top-4 text-gray-500 text-[10px]' : 'top-3 text-gray-400'}`}>
+                                                        <label className={`absolute left-0 right-0 text-center transition-all duration-300 pointer-events-none uppercase tracking-widest text-xs font-bold ${formData.email ? '-top-4 text-gray-500 text-xs' : 'top-3 text-gray-400'}`}>
                                                             E-mailadres
                                                         </label>
                                                     </div>
@@ -641,7 +641,7 @@ const AppointmentPage: React.FC<AppointmentPageProps> = ({ onOpenAdmin }) => {
                                                             className="w-full bg-transparent border-b border-white/20 py-3 text-white focus:outline-none focus:border-white transition-all text-center placeholder-transparent"
                                                             placeholder="Telefoon"
                                                         />
-                                                        <label className={`absolute left-0 right-0 text-center transition-all duration-300 pointer-events-none uppercase tracking-widest text-xs font-bold ${formData.phone ? '-top-4 text-gray-500 text-[10px]' : 'top-3 text-gray-400'}`}>
+                                                        <label className={`absolute left-0 right-0 text-center transition-all duration-300 pointer-events-none uppercase tracking-widest text-xs font-bold ${formData.phone ? '-top-4 text-gray-500 text-xs' : 'top-3 text-gray-400'}`}>
                                                             Telefoonnummer
                                                         </label>
                                                     </div>

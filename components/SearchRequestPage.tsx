@@ -216,7 +216,7 @@ const SearchRequestPage: React.FC<SearchRequestPageProps> = ({ onOpenAdmin }) =>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
                                             {/* MAKE INPUT */}
                                             <div className="space-y-2 relative">
-                                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Merk</label>
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Merk</label>
                                                 <div className="relative">
                                                     <input
                                                         type="text"
@@ -262,7 +262,7 @@ const SearchRequestPage: React.FC<SearchRequestPageProps> = ({ onOpenAdmin }) =>
 
                                             {/* MODEL INPUT */}
                                             <div className="space-y-2 relative">
-                                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Model</label>
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Model</label>
                                                 <div className="relative">
                                                     <input
                                                         type="text"
@@ -309,7 +309,7 @@ const SearchRequestPage: React.FC<SearchRequestPageProps> = ({ onOpenAdmin }) =>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Budget Indicatie (€)</label>
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Budget Indicatie (€)</label>
                                                 <input
                                                     type="text"
                                                     value={formData.budget}
@@ -319,7 +319,7 @@ const SearchRequestPage: React.FC<SearchRequestPageProps> = ({ onOpenAdmin }) =>
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Maximale KM-Stand</label>
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Maximale KM-Stand</label>
                                                 <input
                                                     type="text"
                                                     value={formData.max_km}
@@ -331,7 +331,7 @@ const SearchRequestPage: React.FC<SearchRequestPageProps> = ({ onOpenAdmin }) =>
                                         </div>
 
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Voorkeur Brandstof</label>
+                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Voorkeur Brandstof</label>
                                             <select
                                                 value={formData.brandstof}
                                                 onChange={(e) => setFormData({ ...formData, brandstof: e.target.value })}
@@ -350,7 +350,7 @@ const SearchRequestPage: React.FC<SearchRequestPageProps> = ({ onOpenAdmin }) =>
                                         <h3 className="text-sm font-bold text-white uppercase tracking-widest border-b border-white/10 pb-2">Uw Gegevens</h3>
 
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Naam</label>
+                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Naam</label>
                                             <input
                                                 type="text"
                                                 required
@@ -363,7 +363,7 @@ const SearchRequestPage: React.FC<SearchRequestPageProps> = ({ onOpenAdmin }) =>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">E-mailadres</label>
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">E-mailadres</label>
                                                 <input
                                                     type="email"
                                                     required
@@ -374,7 +374,7 @@ const SearchRequestPage: React.FC<SearchRequestPageProps> = ({ onOpenAdmin }) =>
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Telefoonnummer</label>
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Telefoonnummer</label>
                                                 <input
                                                     type="tel"
                                                     required

@@ -28,7 +28,7 @@ const Collection: React.FC = () => {
     const navigate = useNavigate();
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    const inStockCars = cars.filter(car => !car.is_archived);
+    const inStockCars = cars.filter(car => !car.is_archived && !car.is_sold);
     const stockCount = inStockCars.length;
 
     // With RTL direction, scrollLeft=0 shows rightmost content (cars aligned right)
@@ -48,61 +48,64 @@ const Collection: React.FC = () => {
     };
 
     return (
-        <section id="collectie" className="w-full py-24 bg-[#020202] overflow-hidden">
-            <div className="max-w-[1400px] mx-auto px-6 mb-12 flex flex-col md:flex-row justify-between md:items-end gap-8">
-                <motion.div
-                    initial={{ opacity: 0, x: 0 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6 }}
-                    viewport={{ once: true }}
-                >
-                    <h2 className="text-3xl md:text-5xl font-bold text-white uppercase tracking-widest mb-2">New Arrivals</h2>
-                    <p className="text-gray-500 uppercase tracking-[0.2em] text-xs md:text-sm font-medium">
-                        <span className="text-white font-bold">{stockCount}</span> WAGENS IN AANBOD
-                    </p>
-                </motion.div>
+        <section id="collectie" className="w-full py-24 px-6 relative bg-[#020202] overflow-hidden">
+            <div className="w-full">
+                <div className="max-w-[1400px] mx-auto mb-12 flex flex-col md:flex-row justify-between md:items-end gap-8">
+                    <motion.div
+                        initial={{ opacity: 0, x: 0 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.6 }}
+                        viewport={{ once: true }}
+                    >
+                        <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight uppercase leading-tight text-white mb-2">New Arrivals</h2>
+                        <span className="text-zinc-600 tracking-[0.2em] uppercase text-xs font-bold block">Onze Recente Auto's</span>
+                        <p className="text-gray-500 uppercase tracking-[0.2em] text-xs md:text-sm font-medium">
+                            <span className="text-white font-bold">{stockCount}</span> WAGENS IN AANBOD
+                        </p>
+                    </motion.div>
 
-                <motion.div
-                    initial={{ opacity: 0, x: 0 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.6 }}
-                    viewport={{ once: true }}
-                    className="flex items-center justify-between w-full md:w-auto md:justify-end md:gap-6"
-                >
-                    <div className="flex space-x-2 order-2 md:order-1">
-                        <button
-                            onClick={() => scroll('left')}
-                            className="p-3 border border-white/10 hover:border-white hover:bg-white hover:text-black text-white transition-all duration-300 rounded-full"
-                            aria-label="Scroll left"
-                        >
-                            <ChevronLeft size={20} />
-                        </button>
-                        <button
-                            onClick={() => scroll('right')}
-                            className="p-3 border border-white/10 hover:border-white hover:bg-white hover:text-black text-white transition-all duration-300 rounded-full"
-                            aria-label="Scroll right"
-                        >
-                            <ChevronRight size={20} />
-                        </button>
-                    </div>
+                    <motion.div
+                        initial={{ opacity: 0, x: 0 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.6 }}
+                        viewport={{ once: true }}
+                        className="flex items-center justify-between w-full md:w-auto md:justify-end md:gap-6"
+                    >
+                        <div className="flex space-x-2 order-2 md:order-1">
+                            <button
+                                onClick={() => scroll('left')}
+                                className="p-3 border border-white/10 hover:border-white hover:bg-white hover:text-black text-white transition-all duration-300 rounded-full"
+                                aria-label="Scroll left"
+                            >
+                                <ChevronLeft size={20} />
+                            </button>
+                            <button
+                                onClick={() => scroll('right')}
+                                className="p-3 border border-white/10 hover:border-white hover:bg-white hover:text-black text-white transition-all duration-300 rounded-full"
+                                aria-label="Scroll right"
+                            >
+                                <ChevronRight size={20} />
+                            </button>
+                        </div>
 
-                    <Link to="/collectie" className="flex items-center space-x-2 text-zinc-400 hover:text-white transition-colors duration-300 order-1 md:order-2">
-                        <span className="uppercase tracking-widest text-sm font-bold">Bekijk alles</span>
-                        <ArrowRight size={16} />
-                    </Link>
-                </motion.div>
+                        <Link to="/collectie" className="flex items-center space-x-2 text-zinc-400 hover:text-white transition-colors duration-300 order-1 md:order-2">
+                            <span className="uppercase tracking-widest text-sm font-bold">Bekijk alles</span>
+                            <ArrowRight size={16} />
+                        </Link>
+                    </motion.div>
+                </div>
             </div>
 
             {/* Slider Container with Zero-Flicker Alignment */}
             <div className="relative w-full">
-                {/* Right Fade Gradient only - left side aligns with header */}
-                <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#020202] to-transparent z-20 pointer-events-none" />
+                {/* Right Fade — soft ultra-smooth mask */}
+                <div className="absolute -right-1 md:-right-px top-0 bottom-0 w-12 md:w-20 z-20 pointer-events-none" style={{ background: 'linear-gradient(to left, rgba(2, 2, 2, 1) 0%, rgba(2, 2, 2, 0.85) 35%, rgba(2, 2, 2, 0.5) 65%, rgba(2, 2, 2, 0) 100%)' }} />
 
                 <div
                     ref={scrollRef}
-                    className="w-full overflow-x-auto no-scrollbar pb-10 snap-x snap-mandatory scroll-smooth pl-6 pr-6 md:pl-[max(1.5rem,calc((100vw-1400px)/2+1.5rem))] md:pr-[max(1.5rem,calc((100vw-1400px)/2+1.5rem))]"
+                    className="w-full overflow-x-auto no-scrollbar pb-10 snap-x snap-mandatory scroll-smooth pl-6 pr-6 md:pl-[max(1.5rem,calc((100vw-1400px)/2))] md:pr-[max(1.5rem,calc((100vw-1400px)/2))]"
                     style={{
-                        scrollPaddingLeft: 'max(1.5rem, calc((100vw - 1400px) / 2 + 1.5rem))'
+                        scrollPaddingLeft: 'max(1.5rem, calc((100vw - 1400px) / 2))'
                     }}
                 >
                     <div className="flex space-x-6 w-max items-stretch">
@@ -160,7 +163,7 @@ const Collection: React.FC = () => {
                                                 )}
                                             </h3>
 
-                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 text-[10px] md:text-xs text-gray-500 uppercase tracking-[0.2em] font-medium">
+                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3 text-xs md:text-xs text-gray-500 uppercase tracking-[0.2em] font-medium">
                                                 <span>{car.year}</span>
                                                 <span className="w-1 h-1 bg-zinc-700 rounded-full"></span>
                                                 <span>{car.mileage}</span>

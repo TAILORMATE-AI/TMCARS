@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { HashRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
 
 const rootElement = document.getElementById('root');
@@ -21,7 +21,7 @@ interface ErrorBoundaryState {
 class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   // Fix: Initialize state as a class property to resolve "Property 'state' does not exist" error.
   state: ErrorBoundaryState = { hasError: false, error: null };
-  
+
   // Fix: Explicitly declare props property to resolve "Property 'props' does not exist" error.
   props!: ErrorBoundaryProps;
 
@@ -34,8 +34,8 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       return (
         <div style={{ padding: 20, color: 'white', backgroundColor: '#990000', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
           <h1>Something went wrong.</h1>
-          <pre style={{maxWidth: '800px', overflow: 'auto'}}>{this.state.error?.message}</pre>
-          <button onClick={() => window.location.reload()} style={{marginTop: 20, padding: '10px 20px', background: 'white', color: 'black', border: 'none', cursor: 'pointer'}}>Reload Application</button>
+          <pre style={{ maxWidth: '800px', overflow: 'auto' }}>{this.state.error?.message}</pre>
+          <button onClick={() => window.location.reload()} style={{ marginTop: 20, padding: '10px 20px', background: 'white', color: 'black', border: 'none', cursor: 'pointer' }}>Reload Application</button>
         </div>
       );
     }
@@ -46,8 +46,8 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <ErrorBoundary>
-    <HashRouter>
+    <BrowserRouter>
       <App />
-    </HashRouter>
+    </BrowserRouter>
   </ErrorBoundary>
 );

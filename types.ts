@@ -26,6 +26,7 @@ export interface Car {
   is_archived?: boolean;
   is_sold?: boolean;
   isNew?: boolean;
+  display_order?: number;
 
   // Expert Content
   expertTip?: string;

@@ -3,6 +3,7 @@ import Hero from './Hero.tsx';
 import ActionHub from './ActionHub.tsx';
 import Collection from './Collection.tsx';
 import Reviews from './Reviews.tsx';
+import GaragePromo from './GaragePromo.tsx';
 import Expertise from './Expertise.tsx';
 import Footer from './Footer.tsx';
 import { useCars } from '../context/CarContext.tsx';
@@ -21,6 +22,7 @@ const Home: React.FC<HomeProps> = ({ onOpenAdmin }) => {
       <Hero stockCount={stockCount} />
       <ActionHub />
       <Collection />
+      <GaragePromo />
       <Reviews />
       <Expertise />
       <Footer onOpenAdmin={onOpenAdmin} />

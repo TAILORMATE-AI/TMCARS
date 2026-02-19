@@ -12,5 +12,11 @@
         "api/cleanup-sold.js": {
             "maxDuration": 60
         }
-    }
+    },
+    "crons": [
+        {
+            "path": "/api/cleanup-sold",
+            "schedule": "0 3 * * *"
+        }
+    ]
 }

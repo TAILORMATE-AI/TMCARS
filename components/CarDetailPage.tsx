@@ -35,7 +35,7 @@ const OPTION_CATEGORIES = {
   ]
 };
 
-const FormatMixed = ({ text }: { text: string | number }) => {
+export const FormatMixed = ({ text }: { text: string | number }) => {
   const textStr = String(text);
   return (
     <>
@@ -356,7 +356,7 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
                       <Calendar size={18} className="text-gray-300" />
                     </div>
                     <div className="min-w-0">
-                      <span className="block text-[10px] text-gray-500 uppercase tracking-widest">Bouwjaar</span>
+                      <span className="block text-xs text-gray-500 uppercase tracking-widest">Bouwjaar</span>
                       <span className="text-sm font-bold text-white">{car.year}</span>
                     </div>
                   </div>
@@ -366,7 +366,7 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
                       <Gauge size={18} className="text-gray-300" />
                     </div>
                     <div className="min-w-0">
-                      <span className="block text-[10px] text-gray-500 uppercase tracking-widest truncate">Kilometerstand</span>
+                      <span className="block text-xs text-gray-500 uppercase tracking-widest truncate">Kilometerstand</span>
                       <span className="text-sm font-bold text-white truncate block">{car.mileage}</span>
                     </div>
                   </div>
@@ -376,7 +376,7 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
                       <Settings size={18} className="text-gray-300" />
                     </div>
                     <div>
-                      <span className="block text-[10px] text-gray-500 uppercase tracking-widest">Transmissie</span>
+                      <span className="block text-xs text-gray-500 uppercase tracking-widest">Transmissie</span>
                       <span className="text-sm font-bold text-white">{car.transmission}</span>
                     </div>
                   </div>
@@ -386,7 +386,7 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
                       <Fuel size={18} className="text-gray-300" />
                     </div>
                     <div>
-                      <span className="block text-[10px] text-gray-500 uppercase tracking-widest">Brandstof</span>
+                      <span className="block text-xs text-gray-500 uppercase tracking-widest">Brandstof</span>
                       <span className="text-sm font-bold text-white">{car.fuel}</span>
                     </div>
                   </div>
@@ -398,7 +398,7 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
                         <div className="w-[18px] h-[18px] rounded-full border border-white/20" style={{ backgroundColor: car.color?.toLowerCase().includes('zwart') ? '#1a1a1a' : car.color?.toLowerCase().includes('wit') ? '#f5f5f5' : car.color?.toLowerCase().includes('grijs') ? '#6b7280' : car.color?.toLowerCase().includes('blauw') ? '#3b82f6' : car.color?.toLowerCase().includes('rood') ? '#ef4444' : car.color?.toLowerCase().includes('groen') ? '#22c55e' : car.color?.toLowerCase().includes('bruin') ? '#92400e' : car.color?.toLowerCase().includes('geel') ? '#eab308' : car.color?.toLowerCase().includes('oranje') ? '#f97316' : '#9ca3af' }} />
                       </div>
                       <div>
-                        <span className="block text-[10px] text-gray-500 uppercase tracking-widest">Exterieur</span>
+                        <span className="block text-xs text-gray-500 uppercase tracking-widest">Exterieur</span>
                         <span className="text-sm font-bold text-white capitalize">{car.color}</span>
                       </div>
                     </div>
@@ -411,7 +411,7 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
                         <div className="w-[18px] h-[18px] rounded-full border border-white/20" style={{ backgroundColor: car.interiorColor?.toLowerCase().includes('zwart') ? '#1a1a1a' : car.interiorColor?.toLowerCase().includes('beige') ? '#d4c5a9' : car.interiorColor?.toLowerCase().includes('bruin') ? '#92400e' : car.interiorColor?.toLowerCase().includes('grijs') ? '#6b7280' : car.interiorColor?.toLowerCase().includes('wit') ? '#f5f5f5' : '#9ca3af' }} />
                       </div>
                       <div>
-                        <span className="block text-[10px] text-gray-500 uppercase tracking-widest">Interieur</span>
+                        <span className="block text-xs text-gray-500 uppercase tracking-widest">Interieur</span>
                         <span className="text-sm font-bold text-white capitalize">{car.interiorColor}{car.upholstery ? ` (${car.upholstery})` : ''}</span>
                       </div>
                     </div>
@@ -420,7 +420,7 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
 
                 {/* Technical Specifications - Simple Table */}
                 <div className="bg-[#0A0A0A] border border-white/10 p-3 mb-6">
-                  <h3 className="text-[10px] font-bold text-white uppercase tracking-widest border-b border-white/10 pb-2 mb-2">
+                  <h3 className="text-xs font-bold text-white uppercase tracking-widest border-b border-white/10 pb-2 mb-2">
                     Specificaties
                   </h3>
 
@@ -608,7 +608,7 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
                     </Link>
                   )}
 
-                  <div className="flex items-center justify-center gap-4 text-[10px] text-gray-500 uppercase tracking-widest mt-4">
+                  <div className="flex items-center justify-center gap-4 text-xs text-gray-500 uppercase tracking-widest mt-4">
                     <span className="flex items-center gap-1"><ShieldCheck size={12} /> 12 Maanden Garantie</span>
                     <span className="flex items-center gap-1"><MapPin size={12} /> Zichtbaar op afspraak</span>
                   </div>

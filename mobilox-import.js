@@ -316,6 +316,15 @@ export default async function handler(req, res) {
       const bodyType = getTextValue(data.carrosserie) || 'Overig';
       const bodyLower = bodyType.toLowerCase();
       const fuel = getTextValue(data.brandstof) || '';
+      const modelName = getTextValue(data.model) || '';
+      const typeName = getTextValue(data.type) || '';
+      const fullModelName = `${modelName} ${typeName}`.toLowerCase();
+      const horsepower = parseInt(getTextValue(data.vermogen_motor_pk)) || 0;
+
+      // Performance model keywords for Sportief detection
+      const sportKeywords = ['amg', ' rs ', 'rs3', 'rs4', 'rs5', 'rs6', 'rs7', ' m3', ' m4', ' m5', ' m8', 'm-sport', 'gti', 'gtd', 'gte', 'gts', 'gt3', 'gt4', 'type r', 'type-r', 'cupra', 'vrs', 'nismo', 'sti', 'wrx', 'sport', 'competition', 'performance', 's-line', 's line', 's3', 's4', 's5', 's6', 's7', 's8', 'sq3', 'sq5', 'sq7', 'sq8', 'brabus', 'alpina', 'shelby', 'hellcat', 'srt'];
+      const isSportModel = sportKeywords.some(kw => fullModelName.includes(kw));
+      const isHighPower = horsepower >= 250;
 
       if (bodyLower.includes('suv') || bodyLower.includes('4x4') || bodyLower.includes('terrein')) categories.push('SUV');
       if (bodyLower.includes('cabrio')) categories.push('Cabriolet');
@@ -323,7 +332,9 @@ export default async function handler(req, res) {
       if (bodyLower.includes('station') || bodyLower.includes('break') || bodyLower.includes('touring') || bodyLower.includes('avant')) categories.push('Gezinswagens');
       if (bodyLower.includes('bestel') || bodyLower.includes('lichte vracht')) categories.push('Bestelwagens');
       if (bodyLower.includes('hatchback') || bodyLower.includes('stads')) categories.push('Stadswagens');
-      if (bodyLower.includes('coupé') || bodyLower.includes('sport')) categories.push('Sportief');
+
+      // Sportief: coupé body, sport keyword in model/type, OR high horsepower
+      if (bodyLower.includes('coupé') || isSportModel || isHighPower) categories.push('Sportief');
 
       if (fuel === 'E' || fuel === 'Elektrisch') categories.push('Elek/Hybrid');
       if (fuel === 'H' || fuel === 'Hybride') categories.push('Elek/Hybrid');
@@ -439,7 +450,8 @@ export default async function handler(req, res) {
       const vehicleData = {
         hexon_nr: hexonNr,
         make: getTextValue(data.merk) || null,
-        model: getTextValue(data.model) || null,
+        // Include variant (type) in model for complete naming like "GLC AMG 63 4MATIC+"
+        model: [getTextValue(data.model), getTextValue(data.type)].filter(Boolean).join(' ') || null,
         price: price,
         year: year,
         mileage: mileage,

@@ -176,11 +176,11 @@ const CarCard: React.FC<{ car: Car, onSoldClick?: (car: Car) => void }> = ({ car
 
         {/* Tags */}
         <div className="absolute top-4 left-4 flex gap-2 z-30">
-          <span className="bg-black/40 backdrop-blur-md px-3 py-1 text-white text-[10px] font-bold uppercase tracking-widest border border-white/10 rounded-none">
+          <span className="bg-black/40 backdrop-blur-md px-3 py-1 text-white text-xs font-bold uppercase tracking-widest border border-white/10 rounded-none">
             <FormatMixed text={car.year} />
           </span>
           {car.categories.includes('Recent') && !isSold && (
-            <span className="bg-white text-black px-3 py-1 text-[10px] font-bold uppercase tracking-widest border border-white shadow-[0_0_10px_rgba(255,255,255,0.4)] rounded-none">
+            <span className="bg-white text-black px-3 py-1 text-xs font-bold uppercase tracking-widest border border-white shadow-[0_0_10px_rgba(255,255,255,0.4)] rounded-none">
               NIEUW
             </span>
           )}
@@ -349,7 +349,7 @@ const CollectionPage: React.FC<CollectionPageProps> = ({ onOpenAdmin }) => {
       <div className="relative min-w-[140px] flex-1" ref={containerRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-full bg-[#0A0A0A] border border-white/10 text-white text-[10px] uppercase tracking-widest font-medium py-3 pl-3 pr-8 text-left transition-all duration-300 hover:border-white/30 flex items-center gap-2 ${isOpen ? 'border-white/30 bg-white/5' : ''}`}
+          className={`w-full bg-[#0A0A0A] border border-white/10 text-white text-xs uppercase tracking-widest font-medium py-3 pl-3 pr-8 text-left transition-all duration-300 hover:border-white/30 flex items-center gap-2 ${isOpen ? 'border-white/30 bg-white/5' : ''}`}
         >
           {selectedBrandLogo && (
             <img src={selectedBrandLogo} alt={value} className="w-4 h-4 object-contain brightness-0 invert" />
@@ -378,7 +378,7 @@ const CollectionPage: React.FC<CollectionPageProps> = ({ onOpenAdmin }) => {
                 {showReset && (
                   <button
                     onClick={() => { onChange('All'); setIsOpen(false); }}
-                    className={`w-full text-left px-3 py-3 text-[10px] uppercase tracking-widest hover:bg-white/10 transition-colors border-b border-white/5 flex items-center gap-2 ${value === 'All' ? 'text-white bg-white/5' : 'text-gray-400'}`}
+                    className={`w-full text-left px-3 py-3 text-xs uppercase tracking-widest hover:bg-white/10 transition-colors border-b border-white/5 flex items-center gap-2 ${value === 'All' ? 'text-white bg-white/5' : 'text-gray-400'}`}
                   >
                     Alles
                   </button>
@@ -391,7 +391,7 @@ const CollectionPage: React.FC<CollectionPageProps> = ({ onOpenAdmin }) => {
                     <button
                       key={optValue}
                       onClick={() => { onChange(optValue); setIsOpen(false); }}
-                      className={`w-full text-left px-3 py-3 text-[10px] uppercase tracking-widest hover:bg-white/10 transition-colors border-b border-white/5 last:border-0 flex items-center gap-2 ${value == optValue ? 'text-white bg-white/5' : 'text-gray-400'}`}
+                      className={`w-full text-left px-3 py-3 text-xs uppercase tracking-widest hover:bg-white/10 transition-colors border-b border-white/5 last:border-0 flex items-center gap-2 ${value == optValue ? 'text-white bg-white/5' : 'text-gray-400'}`}
                     >
                       {brandLogo && (
                         <img src={brandLogo} alt={optLabel} className="w-4 h-4 object-contain brightness-0 invert opacity-70" />
@@ -483,7 +483,7 @@ const CollectionPage: React.FC<CollectionPageProps> = ({ onOpenAdmin }) => {
                       <div className={`absolute inset-0 border transition-all duration-500 z-10 pointer-events-none ${activeCategory === cat.id ? 'border-transparent' : 'border-white/10 group-hover:border-white/30'}`} />
                       <CarIcon type={cat.id} className={`w-5 h-5 md:w-6 md:h-6 relative z-20 transition-all duration-300 ${activeCategory === cat.id ? 'text-white' : 'text-zinc-500 group-hover:text-white'}`} />
                     </div>
-                    <span className={`text-[9px] font-bold uppercase tracking-[0.2em] transition-all duration-300 text-center w-full ${activeCategory === cat.id ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`}>
+                    <span className={`text-xs font-bold uppercase tracking-[0.2em] transition-all duration-300 text-center w-full ${activeCategory === cat.id ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`}>
                       <span className="md:hidden">{cat.mobileLabel}</span>
                       <span className="hidden md:inline">{cat.label}</span>
                     </span>
@@ -499,7 +499,7 @@ const CollectionPage: React.FC<CollectionPageProps> = ({ onOpenAdmin }) => {
               <div className="flex flex-col md:flex-row items-center justify-between gap-4 max-w-full">
                 <div className="hidden md:flex items-center gap-2 text-white/50 mr-4">
                   <Filter size={14} />
-                  <span className="text-[10px] uppercase tracking-widest font-bold">Refine</span>
+                  <span className="text-xs uppercase tracking-widest font-bold">Refine</span>
                 </div>
                 <div className="grid grid-cols-2 md:flex md:flex-wrap items-center gap-2 w-full md:w-auto flex-grow justify-center">
                   <FilterDropdown label="Merk" value={selectedMake} onChange={setSelectedMake} options={uniqueMakes.filter(m => m !== 'All')} showBrandLogo={true} />

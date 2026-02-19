@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { Tag, Check, ChevronRight, ChevronLeft, Mail, Upload, Camera, ChevronDown } from 'lucide-react';
 import Footer from './Footer.tsx';
+import { supabase } from '../lib/supabase.ts';
 
 interface SellingPageProps {
     onOpenAdmin: () => void;
@@ -65,15 +66,21 @@ const SellingPage: React.FC<SellingPageProps> = ({ onOpenAdmin }) => {
         // Step 1: Car
         merk: '',
         model: '',
+        bouwjaar: '',
+        kilometerstand: '',
         vin: '',
-        // Step 2: Uploads (Simulated)
-        uploads: {} as Record<string, boolean>,
+        // Step 2: Uploads (Actual Files instead of simulated boolean)
+        uploads: {} as Record<string, File>,
         damageNotes: '',
         // Step 3: Personal Info
         naam: '',
         email: '',
-        tel: ''
+        tel: '',
+        extraMessage: ''
     });
+
+    // We also want to keep the local blob URLs for previewing what the user selected in the UI
+    const [uploadPreviews, setUploadPreviews] = useState<Record<string, string>>({});
 
     // Strict VIN Validation: 17 Chars, Alphanumeric, No I, O, Q
     const handleVinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,22 +94,124 @@ const SellingPage: React.FC<SellingPageProps> = ({ onOpenAdmin }) => {
 
     const isValidVin = (vin: string) => vin.length === 17;
 
+    // Create a hidden file input ref that we can trigger programmatically
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const [activeUploadZone, setActiveUploadZone] = useState<string | null>(null);
+
     const toggleUpload = (zoneId: string) => {
-        setFormData(prev => ({
-            ...prev,
-            uploads: { ...prev.uploads, [zoneId]: !prev.uploads[zoneId] }
-        }));
+        // If they click an already uploaded zone, we remove it
+        if (formData.uploads[zoneId]) {
+            setFormData(prev => {
+                const newUploads = { ...prev.uploads };
+                delete newUploads[zoneId];
+                return { ...prev, uploads: newUploads };
+            });
+            setUploadPreviews(prev => {
+                const newPreviews = { ...prev };
+                delete newPreviews[zoneId];
+                return newPreviews;
+            });
+        } else {
+            // Otherwise, we open the file picker for this zone
+            setActiveUploadZone(zoneId);
+            if (fileInputRef.current) {
+                fileInputRef.current.click();
+            }
+        }
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file && activeUploadZone) {
+            setFormData(prev => ({
+                ...prev,
+                uploads: { ...prev.uploads, [activeUploadZone]: file }
+            }));
+
+            // Create a local blob URL for the preview image
+            const previewUrl = URL.createObjectURL(file);
+            setUploadPreviews(prev => ({
+                ...prev,
+                [activeUploadZone]: previewUrl
+            }));
+        }
+
+        // Reset the file input so the same file could theoretically be selected for another zone again later
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+        setActiveUploadZone(null);
     };
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsSubmitting(false);
-        setIsSent(true);
+        try {
+            // 1. Upload all the images to Supabase Storage
+            const uploadedImageUrls: string[] = [];
+
+            for (const [zoneId, file] of Object.entries(formData.uploads)) {
+                if (!file) continue;
+
+                // Create a reasonably unique filename: timestamp_zoneId_filename
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}_${zoneId}.${fileExt}`;
+                const filePath = `sell_requests/${fileName}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from('customer_uploads')
+                    .upload(filePath, file);
+
+                if (uploadError) {
+                    console.error('Error uploading image:', uploadError);
+                    alert(`Upload failed for image: ${zoneId}. Please try again.`);
+                    setIsSubmitting(false);
+                    return;
+                }
+
+                // Get the public URL for the image
+                const { data: { publicUrl } } = supabase.storage
+                    .from('customer_uploads')
+                    .getPublicUrl(filePath);
+
+                uploadedImageUrls.push(publicUrl);
+            }
+
+            // 2. Insert the full request record into the 'sell_requests' table
+            const { error: insertError } = await supabase
+                .from('sell_requests')
+                .insert([{
+                    merk: formData.merk,
+                    model: formData.model,
+                    bouwjaar: formData.bouwjaar,
+                    kilometerstand: formData.kilometerstand,
+                    vin: formData.vin,
+                    naam: formData.naam,
+                    email: formData.email,
+                    tel: formData.tel,
+                    damage_notes: formData.damageNotes,
+                    extra_message: formData.extraMessage,
+                    images: uploadedImageUrls,
+                    status: 'nieuw'
+                }]);
+
+            if (insertError) {
+                console.error('Error recording sell request:', insertError);
+                alert('Er is een fout opgetreden bij het verwerken van uw aanvraag. Probeer het later opnieuw.');
+                setIsSubmitting(false);
+                return;
+            }
+
+            setIsSent(true);
+        } catch (error) {
+            console.error('Unexpected error during submission:', error);
+            alert('Oeps, er ging iets mis. Probeer het later opnieuw.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleNext = () => {
-        if (step === 1 && (!formData.merk || !formData.model || !isValidVin(formData.vin))) return;
+        if (step === 1 && (!formData.merk || !formData.model || !formData.bouwjaar || !formData.kilometerstand || !isValidVin(formData.vin))) return;
         if (step === 3 && (!formData.naam || !formData.tel || !formData.email)) return;
         setStep(prev => prev + 1);
     };
@@ -144,7 +253,7 @@ const SellingPage: React.FC<SellingPageProps> = ({ onOpenAdmin }) => {
 
                     {/* Progress Bar */}
                     {!isSent && (
-                        <div className="w-full max-w-4xl h-[1px] bg-white/10 mb-12 relative">
+                        <div className="w-full max-w-[1400px] h-[1px] bg-white/10 mb-12 relative">
                             <motion.div
                                 className="absolute left-0 top-0 bottom-0 bg-white"
                                 initial={{ width: "0%" }}
@@ -181,7 +290,7 @@ const SellingPage: React.FC<SellingPageProps> = ({ onOpenAdmin }) => {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
                                             {/* MAKE INPUT */}
                                             <div className="space-y-2 relative">
-                                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Merk</label>
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Merk</label>
                                                 <div className="relative">
                                                     <input type="text"
                                                         value={formData.merk}
@@ -194,7 +303,7 @@ const SellingPage: React.FC<SellingPageProps> = ({ onOpenAdmin }) => {
 
                                             {/* MODEL INPUT */}
                                             <div className="space-y-2 relative">
-                                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Model</label>
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Model</label>
                                                 <div className="relative">
                                                     <input type="text"
                                                         value={formData.model}
@@ -205,13 +314,39 @@ const SellingPage: React.FC<SellingPageProps> = ({ onOpenAdmin }) => {
                                                     />
                                                 </div>
                                             </div>
+
+                                            {/* YEAR INPUT */}
+                                            <div className="space-y-2 relative">
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Bouwjaar</label>
+                                                <div className="relative">
+                                                    <input type="number"
+                                                        value={formData.bouwjaar}
+                                                        onChange={e => setFormData({ ...formData, bouwjaar: e.target.value })}
+                                                        className="w-full bg-white/5 border-b border-white/10 py-3 px-4 text-white focus:outline-none focus:border-white transition-colors"
+                                                        placeholder="bv. 2021"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* MILEAGE INPUT */}
+                                            <div className="space-y-2 relative">
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Kilometerstand</label>
+                                                <div className="relative">
+                                                    <input type="number"
+                                                        value={formData.kilometerstand}
+                                                        onChange={e => setFormData({ ...formData, kilometerstand: e.target.value })}
+                                                        className="w-full bg-white/5 border-b border-white/10 py-3 px-4 text-white focus:outline-none focus:border-white transition-colors"
+                                                        placeholder="bv. 45000"
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
 
                                         {/* VIN INPUT */}
                                         <div className="space-y-2">
                                             <div className="flex justify-between">
-                                                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Chassisnummer (VIN)</label>
-                                                <span className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${isValidVin(formData.vin) ? 'text-green-500' : 'text-gray-600'}`}>
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Chassisnummer (VIN)</label>
+                                                <span className={`text-xs font-bold uppercase tracking-widest transition-colors ${isValidVin(formData.vin) ? 'text-green-500' : 'text-gray-600'}`}>
                                                     {formData.vin.length} / 17
                                                 </span>
                                             </div>
@@ -223,7 +358,7 @@ const SellingPage: React.FC<SellingPageProps> = ({ onOpenAdmin }) => {
                                                 className="w-full bg-white/5 border-b border-white/10 py-3 px-4 text-white uppercase tracking-widest focus:outline-none focus:border-white transition-colors placeholder-gray-700"
                                                 placeholder="XXXXXXXXXXXXXXXXX"
                                             />
-                                            <p className="text-[9px] text-gray-500 uppercase tracking-wide">
+                                            <p className="text-xs text-gray-500 uppercase tracking-wide">
                                                 Uniek nummer van 17 tekens. Letters I, O en Q zijn niet toegestaan.
                                             </p>
                                         </div>
@@ -240,7 +375,7 @@ const SellingPage: React.FC<SellingPageProps> = ({ onOpenAdmin }) => {
                                                     {/* Border overlay */}
                                                     <div className="absolute inset-0 bg-white/20" style={{ clipPath: clipPathValue }} />
                                                     <motion.div className="absolute inset-[1px]" variants={buttonBgVariants} style={{ clipPath: clipPathValue }} />
-                                                    {(formData.merk && formData.model && isValidVin(formData.vin)) && (
+                                                    {(formData.merk && formData.model && formData.bouwjaar && formData.kilometerstand && isValidVin(formData.vin)) && (
                                                         <motion.div variants={shimmerVariants} initial="initial" animate="animate" className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent z-10" style={{ clipPath: clipPathValue }} />
                                                     )}
                                                     <div className="relative px-6 py-3 z-10 flex items-center justify-center space-x-2">
@@ -268,8 +403,17 @@ const SellingPage: React.FC<SellingPageProps> = ({ onOpenAdmin }) => {
                                         </div>
 
                                         <p className="text-gray-400 font-light text-sm max-w-2xl">
-                                            Voor een correcte taxatie hebben wij een volledig beeld nodig. Toon uw wagen in zijn beste licht: 360° exterieur + interieur details.
+                                            Voor een correcte taxatie hebben wij een volledig beeld nodig. Toon uw wagen in zijn beste licht: 360° exterieur + interieur details. (Kies "Uploaden" en selecteer een foto).
                                         </p>
+
+                                        {/* Hidden File Input for Image Picking */}
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleFileChange}
+                                            accept="image/*"
+                                            className="hidden"
+                                        />
 
                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                                             {UPLOAD_ZONES.map((zone) => {
@@ -293,10 +437,10 @@ const SellingPage: React.FC<SellingPageProps> = ({ onOpenAdmin }) => {
                                                                 }`}
                                                             style={{ clipPath: "polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)" }}
                                                         >
-                                                            {/* SIMULATED UPLOADED IMAGE BACKGROUND */}
-                                                            {isUploaded && (
+                                                            {/* ACTUAL UPLOADED IMAGE BACKGROUND PREVIEW */}
+                                                            {isUploaded && uploadPreviews[zone.id] && (
                                                                 <div className="absolute inset-0 z-0">
-                                                                    <img src={zone.mockBg} alt="Upload" className="w-full h-full object-cover" />
+                                                                    <img src={uploadPreviews[zone.id]} alt="Upload Preview" className="w-full h-full object-cover" />
                                                                     <div className="absolute inset-0 bg-black/70 transition-opacity duration-300"></div>
                                                                 </div>
                                                             )}
@@ -309,10 +453,10 @@ const SellingPage: React.FC<SellingPageProps> = ({ onOpenAdmin }) => {
                                                                         className={`w-8 h-8 object-contain transition-all duration-300 ${isUploaded ? 'brightness-0 invert drop-shadow-[0_0_10px_rgba(255,255,255,1)] scale-110' : 'brightness-0 invert opacity-50'}`}
                                                                     />
                                                                 </div>
-                                                                <span className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${isUploaded ? 'text-white drop-shadow-md' : 'text-gray-500'}`}>
+                                                                <span className={`text-xs font-bold uppercase tracking-widest transition-colors ${isUploaded ? 'text-white drop-shadow-md' : 'text-gray-500'}`}>
                                                                     {zone.label}
                                                                 </span>
-                                                                <span className={`text-[9px] uppercase tracking-wider mt-1 transition-colors ${isUploaded ? 'text-green-400 font-bold' : 'text-gray-600'}`}>
+                                                                <span className={`text-xs uppercase tracking-wider mt-1 transition-colors ${isUploaded ? 'text-green-400 font-bold' : 'text-gray-600'}`}>
                                                                     {isUploaded ? 'Geüpload' : 'Uploaden'}
                                                                 </span>
                                                             </div>
@@ -323,7 +467,7 @@ const SellingPage: React.FC<SellingPageProps> = ({ onOpenAdmin }) => {
                                         </div>
 
                                         <div className="space-y-2 pt-8 border-t border-white/5">
-                                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Eventuele Schade Melden</label>
+                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Eventuele Schade Melden</label>
                                             <textarea
                                                 value={formData.damageNotes}
                                                 onChange={(e) => setFormData({ ...formData, damageNotes: e.target.value })}
@@ -351,7 +495,7 @@ const SellingPage: React.FC<SellingPageProps> = ({ onOpenAdmin }) => {
                                                     <motion.div className="absolute inset-[1px]" variants={buttonBgVariants} style={{ clipPath: clipPathValue }} />
                                                     <div className="relative px-6 py-3 z-10 flex items-center justify-center space-x-2">
                                                         <motion.span variants={buttonTextVariants} className="text-xs font-bold uppercase tracking-[0.2em]">
-                                                            Naar Afspraak
+                                                            Naar Gegevens
                                                         </motion.span>
                                                         <motion.div variants={buttonTextVariants}>
                                                             <ChevronRight size={14} />
@@ -374,7 +518,7 @@ const SellingPage: React.FC<SellingPageProps> = ({ onOpenAdmin }) => {
                                         {/* Info text */}
                                         <div className="bg-white/5 border border-white/10 p-4 rounded-sm">
                                             <p className="text-gray-400 text-sm leading-relaxed">
-                                                Na het indienen ontvangt Tom (zaakvoerder) uw aanvraag met de bijgevoegde foto's.
+                                                Na het indienen ontvangen wij uw aanvraag met de bijgevoegde foto's.
                                                 Wij nemen zo snel mogelijk contact met u op om een taxatie te bespreken.
                                             </p>
                                         </div>
@@ -388,6 +532,17 @@ const SellingPage: React.FC<SellingPageProps> = ({ onOpenAdmin }) => {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full bg-white/5 border-b border-white/10 py-3 px-4 text-white focus:outline-none focus:border-white transition-colors" placeholder="Email *" />
                                                 <input type="tel" value={formData.tel} onChange={e => setFormData({ ...formData, tel: e.target.value })} className="w-full bg-white/5 border-b border-white/10 py-3 px-4 text-white focus:outline-none focus:border-white transition-colors" placeholder="Telefoon *" />
+                                            </div>
+
+                                            <div className="space-y-2 pt-4">
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Extra Bericht (Optioneel)</label>
+                                                <textarea
+                                                    value={formData.extraMessage}
+                                                    onChange={e => setFormData({ ...formData, extraMessage: e.target.value })}
+                                                    rows={3}
+                                                    className="w-full bg-white/5 border-b border-white/10 py-3 px-4 text-white focus:outline-none focus:border-white transition-colors resize-none"
+                                                    placeholder="Is er nog iets dat we moeten weten over de wagen of de gewenste afhandeling?"
+                                                />
                                             </div>
                                         </div>
 
