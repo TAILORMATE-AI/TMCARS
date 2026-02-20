@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { useCars } from '../context/CarContext.tsx';
 import { SlidersHorizontal, Search, Star, LayoutGrid, ChevronDown, ChevronRight, X, Filter } from 'lucide-react';
+import { TbSteeringWheel, TbUsers, TbCarSuv, TbBuildingSkyscraper, TbTruckDelivery, TbPlugConnected } from "react-icons/tb";
 import { Link, useNavigate } from 'react-router-dom';
 import { Car } from '../types.ts';
 import Footer from './Footer.tsx';
@@ -23,40 +24,33 @@ const FormatMixed = ({ text }: { text: string | number }) => {
 
 // Custom Silhouette Icons
 const CarIcon = ({ type, className }: { type: string, className?: string }) => {
-  if (type === 'All') {
-    return <LayoutGrid className={className} strokeWidth={1} />;
+  const isInactive = className?.includes('text-zinc-500');
+  const baseClasses = `transition-all duration-300 ${isInactive ? 'opacity-50 group-hover:opacity-100' : 'opacity-100'} ${className}`;
+
+  switch (type) {
+    case 'All':
+      return <LayoutGrid className={baseClasses} strokeWidth={1} />;
+    case 'Recent':
+      return <Star className={baseClasses} strokeWidth={1} />;
+    case 'Sportief':
+      return <TbSteeringWheel className={baseClasses} strokeWidth={1} />;
+    case 'Gezinswagens':
+      return <TbUsers className={baseClasses} strokeWidth={1} />;
+    case 'SUV':
+      return <TbCarSuv className={baseClasses} strokeWidth={1} />;
+    case 'Stadswagens':
+      return <TbBuildingSkyscraper className={baseClasses} strokeWidth={1} />;
+    case 'Bestelwagens':
+      return <TbTruckDelivery className={baseClasses} strokeWidth={1} />;
+    case 'Elek/Hybrid':
+      return <TbPlugConnected className={baseClasses} strokeWidth={1} />;
+    default:
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className={baseClasses}>
+          <path d="M2 16h20M4 16l3-8h10l3 8M7 16v4h2v-4M15 16v4h2v-4" />
+        </svg>
+      );
   }
-
-  if (type === 'Recent') {
-    return <Star className={className} strokeWidth={1} />;
-  }
-
-  const iconUrls: Record<string, string> = {
-    'Sportief': "https://tailormate.ai/tmcars/images/icons/sportief.png",
-    'Gezinswagens': "https://tailormate.ai/tmcars/images/icons/gezinswagen.png",
-    'SUV': "https://tailormate.ai/tmcars/images/icons/suv.png",
-    'Stadswagens': "https://tailormate.ai/tmcars/images/icons/stadswagen.png",
-    'Bestelwagens': "https://tailormate.ai/tmcars/images/icons/bestelwagen.png",
-    'Elek/Hybrid': "http://tailormate.ai/tmcars/images/icons/elekhybrid.png",
-  };
-
-  if (iconUrls[type]) {
-    const isInactive = className?.includes('text-zinc-500');
-
-    return (
-      <img
-        src={iconUrls[type]}
-        alt={type}
-        className={`${className} !w-9 !h-9 md:!w-12 md:!h-12 object-contain transition-all duration-300 brightness-0 invert ${isInactive ? 'opacity-50 group-hover:opacity-100' : 'opacity-100'}`}
-      />
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M2 16h20M4 16l3-8h10l3 8M7 16v4h2v-4M15 16v4h2v-4" />
-    </svg>
-  );
 };
 
 const CATEGORIES = [
@@ -454,7 +448,7 @@ const CollectionPage: React.FC<CollectionPageProps> = ({ onOpenAdmin }) => {
             <div
               className="w-full overflow-x-auto no-scrollbar py-24 -my-12 category-mask"
             >
-              <div className="flex justify-start md:justify-center items-center gap-2 md:gap-8 min-w-max px-6 md:px-0 mx-auto">
+              <div className="flex justify-start md:justify-between items-center gap-2 md:gap-4 lg:gap-8 min-w-max md:min-w-0 md:w-full px-6 md:px-4 mx-auto">
                 {CATEGORIES.map(cat => (
                   <button
                     key={cat.id}
