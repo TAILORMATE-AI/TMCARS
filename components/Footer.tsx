@@ -83,7 +83,25 @@ const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
             </div>
           </div>
 
-          {/* CENTER: Contact */}
+          {/* CENTER: Openingsuren */}
+          <div>
+            <h3 className="text-white text-xs uppercase tracking-[0.2em] mb-6 font-bold">Openingsuren</h3>
+            <div className="text-gray-400 text-sm font-light space-y-2">
+              <p className="text-white font-medium mb-2">Showroom enkel open op afspraak</p>
+              <div className="grid grid-cols-[60px_1fr] gap-1">
+                <span className="text-gray-500">Ma - Vr</span>
+                <span>10u - 12u &amp; 13u - 18u</span>
+
+                <span className="text-gray-500">Za</span>
+                <span>10u - 12u &amp; 13u - 16u</span>
+
+                <span className="text-gray-500">Zo</span>
+                <span>Gesloten</span>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT: Contact */}
           <div>
             <Link to="/contact" className="block text-white text-xs uppercase tracking-[0.2em] mb-6 font-bold hover:text-gray-300 transition-colors">Contact</Link>
             <div className="text-gray-400 text-sm space-y-4 font-light leading-relaxed">
@@ -106,24 +124,6 @@ const Footer: React.FC<FooterProps> = ({ onOpenAdmin }) => {
               <div className="flex items-center space-x-3 text-gray-500 cursor-default">
                 <span className="w-4 flex-shrink-0" />
                 <span className="text-xs">BTW: BE0726.946.506</span>
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT: Openingsuren */}
-          <div>
-            <h3 className="text-white text-xs uppercase tracking-[0.2em] mb-6 font-bold">Openingsuren</h3>
-            <div className="text-gray-400 text-sm font-light space-y-2">
-              <p className="text-white font-medium mb-2">Showroom enkel open op afspraak</p>
-              <div className="grid grid-cols-[60px_1fr] gap-1">
-                <span className="text-gray-500">Ma - Vr</span>
-                <span>10u - 12u &amp; 13u - 18u</span>
-
-                <span className="text-gray-500">Za</span>
-                <span>10u - 12u &amp; 13u - 16u</span>
-
-                <span className="text-gray-500">Zo</span>
-                <span>Gesloten</span>
               </div>
             </div>
           </div>

@@ -164,9 +164,9 @@ const CarCard: React.FC<{ car: Car, onSoldClick?: (car: Car) => void }> = ({ car
 
           {/* SOLD OVERLAY */}
           {isSold && (
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-20">
-              <div className="border-y-2 border-white/50 bg-black/50 px-8 py-2 transform -rotate-12 backdrop-blur-md">
-                <span className="text-2xl font-bold text-white uppercase tracking-[0.3em] drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-20 pb-16 md:pb-0">
+              <div className="border-y-2 border-white/50 bg-black/50 px-6 py-1.5 md:px-8 md:py-2 transform -rotate-12 backdrop-blur-md">
+                <span className="text-lg md:text-2xl font-bold text-white uppercase tracking-[0.3em] drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
                   Verkocht
                 </span>
               </div>
@@ -187,10 +187,10 @@ const CarCard: React.FC<{ car: Car, onSoldClick?: (car: Car) => void }> = ({ car
         </div>
 
         {/* Information */}
-        <div className="absolute bottom-0 left-0 right-0 p-8 z-30">
-          <div className="flex justify-between items-end">
+        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8 z-30 pointer-events-none">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end pointer-events-auto">
             <div>
-              <h3 className="text-2xl font-bold text-white uppercase tracking-wider">
+              <h3 className="text-lg md:text-2xl font-bold text-white uppercase tracking-wider">
                 {car.make}{' '}
                 <span className="font-semibold normal-case text-gray-200">
                   {car.model.split(' ')[0]}
@@ -585,9 +585,9 @@ const CollectionPage: React.FC<CollectionPageProps> = ({ onOpenAdmin }) => {
                   className="w-full h-full object-cover"
                 />
                 {/* SOLD Badge */}
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                  <div className="border-y-2 border-white/50 bg-black/50 px-12 py-3 transform -rotate-12 backdrop-blur-md">
-                    <span className="text-4xl font-bold text-white uppercase tracking-[0.3em] drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]">
+                <div className="absolute bottom-4 right-4 z-20 pointer-events-none">
+                  <div className="border border-white/20 bg-black/60 px-4 py-2 backdrop-blur-md">
+                    <span className="text-sm font-bold text-white uppercase tracking-[0.2em] font-sans">
                       Verkocht
                     </span>
                   </div>

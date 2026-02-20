@@ -72,8 +72,7 @@ const Lightbox = ({ images, initialIndex, onClose }: { images: string[], initial
     setIndex(newIndex);
   };
 
-  const toggleZoom = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
+  const toggleZoom = () => {
     setScale(prev => prev === 1 ? 2.5 : 1);
   };
 
@@ -113,15 +112,17 @@ const Lightbox = ({ images, initialIndex, onClose }: { images: string[], initial
       </button>
 
       {/* Image Container */}
-      <div className="w-full h-full flex items-center justify-center overflow-hidden" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full h-full flex items-center justify-center overflow-hidden">
         <motion.div
-          animate={{ scale: scale }}
+          animate={{ scale: scale, x: scale === 1 ? 0 : undefined, y: scale === 1 ? 0 : undefined }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           className={`relative ${scale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'}`}
           drag={scale > 1}
           dragConstraints={{ left: -1000, right: 1000, top: -800, bottom: 800 }}
-          dragElastic={0.1}
-          onClick={toggleZoom}
+          dragElastic={0}
+          dragMomentum={false}
+          onClick={(e) => e.stopPropagation()} // Stop click from closing the lightbox
+          onTap={() => toggleZoom()} // Handle the actual zoom (onTap ignores drags)
         >
           <img
             src={images[index]}
@@ -135,7 +136,7 @@ const Lightbox = ({ images, initialIndex, onClose }: { images: string[], initial
       {/* Bottom Zoom Controls */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex gap-4 pointer-events-auto" onClick={e => e.stopPropagation()}>
         <button
-          onClick={(e) => toggleZoom(e)}
+          onClick={() => toggleZoom()}
           className="flex items-center gap-2 px-6 py-3 bg-white text-black hover:bg-gray-200 rounded-full font-bold text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
         >
           {scale === 1 ? (
@@ -295,9 +296,9 @@ Bij TM Cars wordt elke wagen onderworpen aan een strenge inspectie alvorens deze
               </div>
 
               {car.is_sold && (
-                <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center z-20 pointer-events-none">
-                  <div className="border-y-2 border-white/50 bg-black/50 px-12 py-4 transform -rotate-12 backdrop-blur-md">
-                    <span className="text-4xl font-bold text-white uppercase tracking-[0.3em] font-sans drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                <div className="absolute bottom-4 right-4 z-20 pointer-events-none">
+                  <div className="border border-white/20 bg-black/60 px-4 py-2 backdrop-blur-md">
+                    <span className="text-sm font-bold text-white uppercase tracking-[0.2em] font-sans">
                       Verkocht
                     </span>
                   </div>

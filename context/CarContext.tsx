@@ -176,13 +176,14 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       display_order: car.display_order || 9999
     };
 
-    const { error } = await supabase.from('vehicles').insert(dbPayload);
+    const { data, error } = await supabase.from('vehicles').insert(dbPayload).select();
 
     if (error) {
       console.error("Error adding car:", error);
-      alert("Er is een fout opgetreden bij het opslaan.");
+      alert(`Fout bij toevoegen: ${error.message || 'Onbekende RLS fout'}`);
     } else {
-      fetchCars(); // Refresh list
+      console.log("Successfully added car to DB:", data);
+      await fetchCars(); // Refresh list immediately and wait for it
     }
   };
 
@@ -224,6 +225,36 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteCar = async (id: number) => {
+    console.log("Attempting to delete car with ID:", id);
+
+    // 1. Find the car to get its images
+    const carToDelete = cars.find(c => c.id === id);
+
+    // 2. Delete images from storage if they exist in own-vehicle-uploads
+    if (carToDelete && carToDelete.images && carToDelete.images.length > 0) {
+      const pathsToDelete = carToDelete.images
+        .filter(url => url.includes('/own-vehicle-uploads/'))
+        .map(url => {
+          // Extract everything after '/own-vehicle-uploads/'
+          const parts = url.split('/own-vehicle-uploads/');
+          return parts.length > 1 ? parts[1] : null;
+        })
+        .filter(Boolean) as string[];
+
+      if (pathsToDelete.length > 0) {
+        console.log("Deleting images from storage:", pathsToDelete);
+        const { error: storageError } = await supabase.storage
+          .from('own-vehicle-uploads')
+          .remove(pathsToDelete);
+
+        if (storageError) {
+          console.error("Warning: Failed to delete some images from storage", storageError);
+          // We continue with row deletion even if storage deletion fails partially
+        }
+      }
+    }
+
+    // 3. Delete the database row
     const { error } = await supabase
       .from('vehicles')
       .delete()
@@ -231,8 +262,11 @@ export const CarProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (error) {
       console.error("Error deleting car:", error);
+      alert(`Fout bij verwijderen: ${error.message || 'Onbekende fout'}`);
     } else {
+      console.log("Successfully deleted car:", id);
       setCars(prev => prev.filter(c => c.id !== id));
+      await fetchCars(); // Extra refresh om zeker te zijn dat DB sync is
     }
   };
 

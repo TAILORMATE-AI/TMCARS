@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useCars } from '../context/CarContext.tsx';
 import { Car } from '../types.ts';
 import { Play, Pause, X, Plus, Edit, Trash2, CheckCircle, Clock, Save, Image as ImageIcon, CreditCard, Key, AlertCircle, TrendingUp, Settings, LogOut, ExternalLink, Calendar, Gauge, Fuel, Download, Mail, ChevronRight, Menu, Loader2, ArrowRight, Star, Tag, Smartphone, Fingerprint, Shield, Banknote, MapPin, Eye, Zap, MessageSquare, Briefcase, Camera, ChevronLeft, GripVertical, Archive, LayoutGrid, DollarSign, Edit3, UploadCloud, Link as LinkIcon, Activity, Sun, Moon, Search, ChevronDown, LayoutDashboard } from 'lucide-react';
-import { motion, AnimatePresence, Reorder } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { CAR_DATABASE } from '../data/carDatabase.ts';
 import { DropdownScrollContainer } from './SearchRequestPage.tsx';
@@ -104,6 +104,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
     const [isLoadingRequests, setIsLoadingRequests] = useState(false);
     const [requestToConfirm, setRequestToConfirm] = useState<{ id: string, status: string, action: 'afgehandeld' | 'delete' } | null>(null);
+    const [carToDelete, setCarToDelete] = useState<number | null>(null);
 
     useEffect(() => {
         fetchSellRequests();
@@ -282,43 +283,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
         setFormData(p => ({ ...p, mileage: new Intl.NumberFormat('nl-BE').format(num), mileageValue: num }));
     };
 
-    // Media Logic
-    const handleUrlInputChange = (index: number, value: string) => {
-        const newInputs = [...urlInputs];
-        newInputs[index] = value;
-        setUrlInputs(newInputs);
-    };
-
-    const addUrlInput = () => setUrlInputs([...urlInputs, '']);
-
-    const removeUrlInput = (index: number) => {
-        const newInputs = urlInputs.filter((_, i) => i !== index);
-        setUrlInputs(newInputs.length ? newInputs : ['']);
-    };
-
-    const syncUrlsToMedia = () => {
-        const validUrls = urlInputs.filter(url => url.trim().length > 0);
-        const newItems = [...mediaItems];
-        validUrls.forEach(url => {
-            if (!newItems.includes(url)) newItems.push(url);
-        });
-        setMediaItems(newItems);
-        setUrlInputs(['']);
-    };
-
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            const files = Array.from(e.target.files);
-            files.forEach(file => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    setMediaItems(prev => [...prev, reader.result as string]);
-                };
-                reader.readAsDataURL(file as Blob);
-            });
-        }
-    };
-
     const removeMediaItem = (index: number) => {
         setMediaItems(prev => prev.filter((_, i) => i !== index));
     };
@@ -361,6 +325,81 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
         setUrlInputs(['']);
         setSelectedCategories([]);
         setSelectedOptions([]);
+    };
+
+    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (!files || files.length === 0) return;
+
+        setIsSubmitting(true);
+        const uploadedUrls: string[] = [];
+
+        try {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+                const filePath = `cars/${fileName}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from('own-vehicle-uploads')
+                    .upload(filePath, file);
+
+                if (uploadError) {
+                    throw uploadError;
+                }
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('own-vehicle-uploads')
+                    .getPublicUrl(filePath);
+
+                uploadedUrls.push(publicUrl);
+            }
+
+            setMediaItems(prevItems => [...prevItems, ...uploadedUrls]);
+            setSuccessMsg(`${uploadedUrls.length} afbeelding(en) succesvol geüpload`);
+            setTimeout(() => setSuccessMsg(''), 3000);
+
+        } catch (error: any) {
+            console.error('Error uploading images:', error);
+            alert(`Er is een fout opgetreden bij het uploaden: ${error.message}`);
+        } finally {
+            setIsSubmitting(false);
+            // Reset het input element zodat dezelfde bestanden opnieuw geselecteerd kunnen worden
+            if (event.target) {
+                event.target.value = '';
+            }
+        }
+    };
+
+    const addUrlInput = () => {
+        setUrlInputs([...urlInputs, '']);
+    };
+
+    const handleUrlInputChange = (index: number, value: string) => {
+        const newInputs = [...urlInputs];
+        newInputs[index] = value;
+        setUrlInputs(newInputs);
+    };
+
+    const removeUrlInput = (index: number) => {
+        const newInputs = [...urlInputs];
+        newInputs.splice(index, 1);
+        setUrlInputs(newInputs);
+    };
+
+    const syncUrlsToMedia = () => {
+        const validUrls = urlInputs.filter(url => url.trim() !== '' && url.startsWith('http'));
+        if (validUrls.length > 0) {
+            setMediaItems(prev => {
+                // Voeg alleen nieuwe URL's toe die nog niet in mediaItems staan
+                const newUrls = validUrls.filter(url => !prev.includes(url));
+                return [...prev, ...newUrls];
+            });
+            setSuccessMsg(`${validUrls.length} URL(s) gesynchroniseerd`);
+            setTimeout(() => setSuccessMsg(''), 3000);
+            setUrlInputs(['']); // Reset na sync
+        }
     };
 
     const handleSubmitCar = async (e: React.FormEvent) => {
@@ -436,6 +475,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
         // But assuming we are mostly reordering in 'All' view, this is sufficient.
 
         updateCarOrder(newOrderedCars);
+    };
+
+    const handleMediaDragEnd = (result: DropResult) => {
+        if (!result.destination) return;
+
+        const sourceIndex = result.source.index;
+        const destinationIndex = result.destination.index;
+
+        if (sourceIndex === destinationIndex) return;
+
+        const newMediaItems = Array.from(mediaItems);
+        const [reorderedItem] = newMediaItems.splice(sourceIndex, 1);
+        newMediaItems.splice(destinationIndex, 0, reorderedItem);
+
+        setMediaItems(newMediaItems);
     };
 
     if (!isAuthenticated) {
@@ -554,7 +608,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                             >
                                 <div className="flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-4 w-full">
                                     <Mail size={20} className="md:w-4 md:h-4 shrink-0" />
-                                    <span className="block md:inline text-[9px] md:text-xs text-center leading-tight mt-0.5 md:mt-0 w-full">Aanvragen</span>
+                                    <span className="block md:inline text-[9px] md:text-xs text-center leading-tight mt-0.5 md:mt-0 w-full whitespace-nowrap">VERKOOP AANVRAGEN</span>
                                 </div>
                                 {/* Unread badge */}
                                 {sellRequests.filter(r => r.status === 'nieuw').length > 0 && (
@@ -671,24 +725,24 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                                     <p className="text-xs text-gray-500 uppercase tracking-widest mb-10 relative z-10">Beheerpaneel & Overzicht</p>
 
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-4 sm:px-0 relative z-10 max-w-3xl mx-auto">
-                                        <div onClick={() => setActiveTab('inventory')} className="bg-[#050505] border border-white/5 p-4 sm:p-6 hover:border-white/20 transition-all cursor-pointer group rounded-sm flex flex-col items-center justify-center">
-                                            <div className="flex items-center justify-center gap-3 text-gray-400 group-hover:text-white transition-colors mb-2">
-                                                <LayoutGrid size={18} className="text-blue-500/80" />
-                                                <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Live Voorraad</span>
+                                        <div onClick={() => setActiveTab('inventory')} className="bg-[#050505] border border-white/5 p-4 sm:p-6 xl:p-8 hover:border-white/20 transition-all cursor-pointer group rounded-sm flex flex-col items-center justify-center">
+                                            <div className="flex flex-col items-center justify-center gap-2 text-gray-400 group-hover:text-white transition-colors mb-3">
+                                                <LayoutGrid size={20} className="text-blue-500/80" />
+                                                <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-center leading-tight">Live<br />Voorraad</span>
                                             </div>
                                             <span className="text-2xl font-bold font-sans text-white">{stockCount}</span>
                                         </div>
-                                        <div onClick={() => setActiveTab('inventory')} className="bg-[#050505] border border-white/5 p-4 sm:p-6 hover:border-white/20 transition-all cursor-pointer group rounded-sm flex flex-col items-center justify-center">
-                                            <div className="flex items-center justify-center gap-3 text-gray-400 group-hover:text-white transition-colors mb-2">
-                                                <DollarSign size={18} className="text-green-500/80" />
-                                                <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Verkocht</span>
+                                        <div onClick={() => setActiveTab('inventory')} className="bg-[#050505] border border-white/5 p-4 sm:p-6 xl:p-8 hover:border-white/20 transition-all cursor-pointer group rounded-sm flex flex-col items-center justify-center">
+                                            <div className="flex flex-col items-center justify-center gap-2 text-gray-400 group-hover:text-white transition-colors mb-3">
+                                                <DollarSign size={20} className="text-green-500/80" />
+                                                <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-center leading-tight"><br className="hidden md:block" />Verkocht</span>
                                             </div>
                                             <span className="text-2xl font-bold font-sans text-white">{soldCount}</span>
                                         </div>
-                                        <div onClick={() => setActiveTab('requests')} className="bg-[#050505] border border-white/5 p-4 sm:p-6 hover:border-white/20 transition-all cursor-pointer group rounded-sm flex flex-col items-center justify-center relative">
-                                            <div className="flex items-center justify-center gap-3 text-gray-400 group-hover:text-white transition-colors mb-2">
-                                                <Mail size={18} className="text-red-500/80" />
-                                                <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">Aanvragen</span>
+                                        <div onClick={() => setActiveTab('requests')} className="bg-[#050505] border border-white/5 p-4 sm:p-6 xl:p-8 hover:border-white/20 transition-all cursor-pointer group rounded-sm flex flex-col items-center justify-center relative">
+                                            <div className="flex flex-col items-center justify-center gap-2 text-gray-400 group-hover:text-white transition-colors mb-3">
+                                                <Mail size={20} className="text-red-500/80" />
+                                                <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-center leading-tight">Verkoop<br />Aanvragen</span>
                                             </div>
                                             <span className="text-2xl font-bold font-sans text-white">{sellRequests.filter(r => r.status === 'nieuw').length}</span>
                                             {sellRequests.filter(r => r.status === 'nieuw').length > 0 && (
@@ -699,7 +753,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                                             <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center text-gray-400 group-hover:text-white group-hover:bg-white/10 transition-colors">
                                                 <Plus size={20} />
                                             </div>
-                                            <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest mt-3 text-gray-500 group-hover:text-white transition-colors">Nieuwe Wagen</span>
+                                            <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest mt-3 text-gray-500 group-hover:text-white transition-colors text-center leading-tight">Nieuwe<br />Wagen</span>
                                         </div>
                                     </div>
                                 </div>
@@ -795,7 +849,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                                                                             <Archive size={16} />
                                                                         </button>
                                                                         <button
-                                                                            onClick={() => { if (window.confirm('Wagen definitief verwijderen?')) deleteCar(car.id) }}
+                                                                            onClick={() => setCarToDelete(car.id)}
                                                                             className="p-2 text-gray-600 hover:text-red-500 transition-colors ml-auto md:ml-0"
                                                                             title="Verwijderen"
                                                                         >
@@ -977,23 +1031,38 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                                             {mediaItems.length > 0 && (
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block">Galerij Volgorde (Sleep om te sorteren - Eerste is Hoofdfoto)</label>
-                                                    <Reorder.Group axis="y" values={mediaItems} onReorder={setMediaItems} className="grid grid-cols-4 gap-3">
-                                                        {mediaItems.map((item, idx) => (
-                                                            <Reorder.Item
-                                                                key={item}
-                                                                value={item}
-                                                                className="relative aspect-video group cursor-grab active:cursor-grabbing"
-                                                                whileDrag={{ scale: 1.05, boxShadow: "0 0 15px rgba(229, 231, 235, 0.6)", zIndex: 50, borderColor: "rgba(255,255,255,0.8)" }}
-                                                            >
-                                                                <img src={item} alt="" className="w-full h-full object-cover border border-white/10" />
-                                                                <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/30 transition-colors pointer-events-none"></div>
-                                                                {idx === 0 && <div className="absolute top-1 left-1 bg-blue-500 text-white text-[8px] font-bold px-1 uppercase tracking-wider">Main</div>}
-                                                                <button type="button" onClick={() => removeMediaItem(idx)} className="absolute top-1 right-1 bg-black/50 hover:bg-red-500 p-1 text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    <X size={10} />
-                                                                </button>
-                                                            </Reorder.Item>
-                                                        ))}
-                                                    </Reorder.Group>
+                                                    <DragDropContext onDragEnd={handleMediaDragEnd}>
+                                                        <Droppable droppableId="media-gallery" direction="horizontal" isDropDisabled={false} ignoreContainerClipping={false} isCombineEnabled={false}>
+                                                            {(provided) => (
+                                                                <div
+                                                                    {...provided.droppableProps}
+                                                                    ref={provided.innerRef}
+                                                                    className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+                                                                >
+                                                                    {mediaItems.map((item, idx) => (
+                                                                        <Draggable key={item} draggableId={item} index={idx}>
+                                                                            {(provided, snapshot) => (
+                                                                                <div
+                                                                                    ref={provided.innerRef}
+                                                                                    {...provided.draggableProps}
+                                                                                    {...provided.dragHandleProps}
+                                                                                    className={`relative aspect-video group cursor-grab active:cursor-grabbing ${snapshot.isDragging ? 'shadow-[0_0_15px_rgba(255,255,255,0.6)] z-50 ring-2 ring-white scale-105' : ''}`}
+                                                                                >
+                                                                                    <img src={item} alt="" className="w-full h-full object-cover border border-white/10" />
+                                                                                    <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/30 transition-colors pointer-events-none"></div>
+                                                                                    {idx === 0 && <div className="absolute top-1 left-1 bg-blue-500 text-white text-[8px] font-bold px-1 uppercase tracking-wider">Main</div>}
+                                                                                    <button type="button" onClick={(e) => { e.stopPropagation(); removeMediaItem(idx); }} className="absolute top-1 right-1 bg-black/50 hover:bg-red-500 p-1 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                                                                        <X size={10} />
+                                                                                    </button>
+                                                                                </div>
+                                                                            )}
+                                                                        </Draggable>
+                                                                    ))}
+                                                                    {provided.placeholder}
+                                                                </div>
+                                                            )}
+                                                        </Droppable>
+                                                    </DragDropContext>
                                                 </div>
                                             )}
                                         </div>
@@ -1313,6 +1382,73 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                                             >
                                                 {requestToConfirm.action === 'delete' ? <Trash2 size={18} /> : <CheckCircle size={18} />}
                                                 {requestToConfirm.action === 'delete' ? 'JA, VERWIJDER' : 'JA, WIS & AFHANDELEN'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Delete Car Confirmation Modal */}
+                    <AnimatePresence>
+                        {carToDelete && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                                onClick={() => setCarToDelete(null)}
+                            >
+                                <motion.div
+                                    initial={{ scale: 0.9, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.9, opacity: 0 }}
+                                    className="relative max-w-lg w-full bg-[#0A0A0A] border border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.2)]"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    {/* Close button */}
+                                    <button
+                                        onClick={() => setCarToDelete(null)}
+                                        className="absolute top-4 right-4 z-20 p-2 text-gray-500 hover:text-white transition-colors"
+                                    >
+                                        <X size={20} />
+                                    </button>
+
+                                    <div className="p-8 text-center">
+                                        <div className="w-16 h-16 bg-red-500/10 border border-red-500 flex items-center justify-center mx-auto mb-6 transform rotate-3">
+                                            <Trash2 className="text-red-500" size={32} />
+                                        </div>
+
+                                        <h3 className="text-2xl font-bold text-white uppercase tracking-widest mb-2">
+                                            Wagen Verwijderen?
+                                        </h3>
+
+                                        <div className="w-full border-l-4 p-5 mb-8 text-left bg-white/5 border-red-500">
+                                            <p className="text-sm md:text-base uppercase tracking-widest font-bold mb-2 flex items-center gap-2 text-red-400">
+                                                <AlertCircle size={18} /> DEFINITIEVE ACTIE
+                                            </p>
+                                            <p className="text-xs md:text-sm text-gray-300 font-sans leading-relaxed">
+                                                Weet u zeker dat u deze wagen <strong>definitief</strong> wilt verwijderen uit de catalogus?
+                                            </p>
+                                        </div>
+
+                                        <div className="flex flex-col sm:flex-row w-full gap-3">
+                                            <button
+                                                onClick={() => setCarToDelete(null)}
+                                                className="flex-1 px-4 py-4 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors border border-white/10"
+                                            >
+                                                Annuleren
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    deleteCar(carToDelete);
+                                                    setCarToDelete(null);
+                                                }}
+                                                className="flex-1 px-4 py-4 text-sm font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 border bg-red-600 text-white hover:bg-red-500 border-red-500"
+                                            >
+                                                <Trash2 size={18} />
+                                                JA, VERWIJDER
                                             </button>
                                         </div>
                                     </div>

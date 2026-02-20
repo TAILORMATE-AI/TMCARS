@@ -31,14 +31,17 @@ const Collection: React.FC = () => {
     const inStockCars = cars.filter(car => !car.is_archived && !car.is_sold);
     const stockCount = inStockCars.length;
 
+    // Use ID descending to get the newest cars first, limited to max 10
+    const newArrivals = [...inStockCars]
+        .sort((a, b) => b.id - a.id)
+        .slice(0, 10);
+
     // With RTL direction, scrollLeft=0 shows rightmost content (cars aligned right)
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollLeft = 0;
         }
-    }, [inStockCars]);
-
-
+    }, [newArrivals]);
 
     const scroll = (direction: 'left' | 'right') => {
         if (scrollRef.current) {
@@ -109,7 +112,7 @@ const Collection: React.FC = () => {
                     }}
                 >
                     <div className="flex space-x-6 w-max items-stretch">
-                        {inStockCars.map((car, index) => (
+                        {newArrivals.map((car, index) => (
                             <motion.div
                                 key={car.id}
                                 initial={{ opacity: 0, y: 20 }}

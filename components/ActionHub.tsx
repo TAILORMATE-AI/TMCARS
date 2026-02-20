@@ -71,7 +71,6 @@ const ActionHub: React.FC = () => {
                 className="group relative h-full bg-[#0A0A0A] border border-white/10 hover:border-zinc-600 transition-colors duration-300 p-6 flex flex-col justify-center items-center text-center cursor-pointer"
               >
                 <div className="absolute inset-0 border border-white/0 group-hover:border-white/10 pointer-events-none transition-colors duration-300 z-20"></div>
-                <LayoutGrid className="text-zinc-400 group-hover:text-white transition-colors duration-300 mb-3" size={24} />
 
                 <div className="text-4xl md:text-5xl font-bold text-white">
                   <StockCounter value={stockCount} />
@@ -88,14 +87,10 @@ const ActionHub: React.FC = () => {
             whileHover={{ y: -5 }}
             className="group relative col-span-1 md:col-span-1 lg:col-start-1 lg:col-span-1 lg:row-start-2"
           >
-            <Link to="/verkopen" className="block h-full bg-[#0A0A0A] border border-white/10 hover:border-zinc-600 transition-colors duration-300 p-8 flex flex-col justify-between overflow-hidden cursor-pointer">
+            <Link to="/verkopen" className="block h-full bg-[#0A0A0A] border border-white/10 hover:border-zinc-600 transition-colors duration-300 p-8 flex flex-col justify-center items-center text-center overflow-hidden cursor-pointer">
               {/* Inner Glow */}
               <div className="absolute inset-0 border border-white/0 group-hover:border-white/10 pointer-events-none transition-colors duration-300 z-20"></div>
 
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <Tag size={100} />
-              </div>
-              <Tag className="text-zinc-400 group-hover:text-white transition-colors duration-300 mb-4" size={32} />
               <div className="z-10">
                 <h3 className="text-xl md:text-2xl font-bold tracking-widest text-white mb-2 uppercase">Wagen Verkopen?</h3>
                 <p className="text-zinc-500 text-sm font-light leading-relaxed group-hover:text-zinc-300 transition-colors duration-300">
@@ -109,12 +104,11 @@ const ActionHub: React.FC = () => {
           <motion.div
             variants={itemVariants}
             whileHover={{ scale: 1.02 }}
-            className="group relative col-span-1 md:col-span-1 lg:col-start-2 lg:col-span-1 lg:row-start-2 bg-[#0A0A0A] border border-white/10 hover:border-zinc-600 transition-colors duration-300 p-6 flex flex-col justify-center cursor-default"
+            className="group relative col-span-1 md:col-span-1 lg:col-start-2 lg:col-span-1 lg:row-start-2 bg-[#0A0A0A] border border-white/10 hover:border-zinc-600 transition-colors duration-300 p-6 flex flex-col justify-center items-center text-center cursor-default"
           >
             {/* Inner Glow */}
             <div className="absolute inset-0 border border-white/0 group-hover:border-white/10 pointer-events-none transition-colors duration-300 z-20"></div>
 
-            <ShieldCheck className="text-zinc-400 group-hover:text-white transition-colors duration-300 mb-3" size={24} />
             <h4 className="text-xs font-bold tracking-[0.2em] uppercase text-gray-400">12 Maanden Garantie</h4>
             <p className="text-zinc-500 text-xs mt-2 font-light leading-relaxed group-hover:text-zinc-300 transition-colors duration-300">Zorgeloos rijden met onze volledige garantie.</p>
           </motion.div>

@@ -28,17 +28,17 @@ const GaragePromo: React.FC = () => {
                         <span className="text-gray-500 font-bold tracking-[0.2em] uppercase text-xs">Partnerbedrijf</span>
                     </div>
 
-                    <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight uppercase leading-tight text-white mb-8 bg-gradient-to-r from-gray-200 via-white to-gray-400 bg-clip-text text-transparent">
-                        TOTAALONDERHOUD <br /> VLAKBIJ.
+                    <h2 className="text-3xl md:text-4xl xl:text-5xl font-extrabold tracking-tight uppercase leading-tight text-white mb-8 bg-gradient-to-r from-gray-200 via-white to-gray-400 bg-clip-text text-transparent break-words sm:break-normal">
+                        TOTAAL&shy;ONDERHOUD <br className="hidden sm:block" /> VLAKBIJ.
                     </h2>
 
                     <div className="space-y-8 mb-10">
                         <div className="text-gray-400 font-light leading-relaxed text-lg space-y-6 max-w-lg">
                             <p>
-                                Naast exclusieve wagens bieden wij ook <strong>premium onderhoud</strong> via onze zusteronderneming <span className="text-white font-medium">TNR Automotive</span>.
+                                Service stopt niet bij de verkoop. Pal naast onze showroom bevindt zich onze zusteronderneming <strong className="text-white font-medium">TNR Automotive</strong>.
                             </p>
                             <p>
-                                Gelegen aan de Industrielaan 33, staat het team klaar voor onderhoud, herstellingen en diagnose van alle merken, met dezelfde passie voor perfectie.
+                                Aangezien de zaakvoerder van TM Cars tevens mede-eigenaar is van TNR, bent u voor onderhoud, herstellingen en diagnose verzekerd van exact dezelfde passie en perfectie.
                             </p>
                         </div>
                     </div>

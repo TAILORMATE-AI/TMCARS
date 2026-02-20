@@ -75,7 +75,7 @@ const Reviews = () => {
     "lastUpdated": "19-02-2026 07:00:08",
     "stats": {
       "google_rating": 5,
-      "google_count": 256,
+      "google_count": 272,
       "autoscout_rating": 4.9,
       "autoscout_count": 432
     },
@@ -184,14 +184,14 @@ const Reviews = () => {
   const infiniteReviews = reviews.length > 0 ? [...reviews, ...reviews, ...reviews, ...reviews] : [];
 
   // Bepaal de animatieduur op basis van het apparaat
-  // Sneller gemaakt: Desktop/Tablet 45s (was 80s), Mobiel 20s (was 30s)
-  const duration = isMobile ? 20 : 45;
+  // Vertraagd op verzoek van de klant
+  const duration = isMobile ? 60 : 130;
 
   // Veiligheid: toon niets als er een fout is of geen data
   if (loading || reviews.length === 0) return null;
 
   return (
-    <section id="reviews" className="w-full py-24 bg-[#020202] border-t border-white/5 relative overflow-hidden">
+    <section id="reviews" className="w-full py-24 bg-[#020202] relative overflow-hidden">
       {/* Background Radial Gradient - Hidden on Mobile */}
       <div
         className="hidden md:block absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[100vw] max-w-[1200px] max-h-[1200px] pointer-events-none opacity-20"
@@ -250,11 +250,13 @@ const Reviews = () => {
             // Dit zorgt voor de onzichtbare "snap" terug naar het begin.
             animate={{ x: ['0%', '-50%'] }}
             transition={{ ease: 'linear', duration: duration, repeat: Infinity }}
+            style={{ willChange: 'transform' }}
           >
             {infiniteReviews.map((review, index) => (
               <div
                 key={index}
-                className="bg-[#0A0A0A]/80 backdrop-blur-md border border-white/10 p-8 flex flex-col h-full flex-none w-[90vw] md:w-[450px] mx-3"
+                className="bg-[#0A0A0A] border border-white/[0.08] p-8 flex flex-col h-full flex-none w-[90vw] md:w-[450px] mx-3"
+                style={{ backfaceVisibility: 'hidden', transform: 'translateZ(0)' }}
               >
                 <div className="flex justify-between items-center mb-4">
                   <SourceLogo source={review.source} />
