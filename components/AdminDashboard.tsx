@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useCars } from '../context/CarContext.tsx';
 import { Car } from '../types.ts';
-import { Play, Pause, X, Plus, Edit, Trash2, CheckCircle, Clock, Save, Image as ImageIcon, CreditCard, Key, AlertCircle, TrendingUp, Settings, LogOut, ExternalLink, Calendar, Gauge, Fuel, Download, Mail, ChevronRight, Menu, Loader2, ArrowRight, Star, Tag, Smartphone, Fingerprint, Shield, Banknote, MapPin, Eye, Zap, MessageSquare, Briefcase, Camera, ChevronLeft, GripVertical, Archive, LayoutGrid, DollarSign, Edit3, UploadCloud, Link as LinkIcon, Activity, Sun, Moon, Search, ChevronDown, LayoutDashboard } from 'lucide-react';
+import { Play, Pause, X, Plus, Edit, Trash2, CheckCircle, Clock, Save, Image as ImageIcon, CreditCard, Key, AlertCircle, TrendingUp, Settings, LogOut, ExternalLink, Calendar, Gauge, Fuel, Download, Mail, ChevronRight, Menu, Loader2, ArrowRight, Star, Tag, Smartphone, Fingerprint, Shield, Banknote, MapPin, Eye, Zap, MessageSquare, Briefcase, Camera, ChevronLeft, GripVertical, Archive, LayoutGrid, DollarSign, Edit3, UploadCloud, Link as LinkIcon, Activity, Sun, Moon, Search, ChevronDown, LayoutDashboard, User, FileText, Car as CarIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { CAR_DATABASE } from '../data/carDatabase.ts';
@@ -102,6 +102,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
     // Requests State
     const [sellRequests, setSellRequests] = useState<any[]>([]);
     const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
+    const [requestFilter, setRequestFilter] = useState<'all' | 'nieuw' | 'afgehandeld'>('all');
     const [isLoadingRequests, setIsLoadingRequests] = useState(false);
     const [requestToConfirm, setRequestToConfirm] = useState<{ id: string, status: string, action: 'afgehandeld' | 'delete' } | null>(null);
     const [carToDelete, setCarToDelete] = useState<number | null>(null);
@@ -162,17 +163,50 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
         setRequestToConfirm({ id, status: '', action: 'delete' });
     };
 
+    const deleteRequestImages = async (images: string[]) => {
+        if (!images || images.length === 0) return;
+        try {
+            const pathsToDelete = images
+                .filter((url: string) => url.includes('/customer_uploads/'))
+                .map((url: string) => {
+                    // URL format: https://xxx.supabase.co/storage/v1/object/public/customer_uploads/sell_requests/filename.ext
+                    // We need: sell_requests/filename.ext
+                    const parts = url.split('/customer_uploads/');
+                    return parts[parts.length - 1]; // e.g. 'sell_requests/1234_front.jpg'
+                });
+
+            if (pathsToDelete.length > 0) {
+                const { error } = await supabase.storage.from('customer_uploads').remove(pathsToDelete);
+                if (error) console.error('Failed to delete images from storage:', error);
+            }
+        } catch (e) {
+            console.error('Failed to delete images from storage', e);
+        }
+    };
+
     const markRequestProcessed = async (id: string, currentStatus: string, doDeleteImages: boolean = false) => {
         const newStatus = currentStatus === 'nieuw' ? 'afgehandeld' : 'nieuw';
+        const req = sellRequests.find(r => r.id === id);
 
-        if (newStatus === 'afgehandeld') {
-            // User requested that "Afgehandeld" completely wipes the record and images from the database
-            await deleteRequest(id);
-            return;
+        // When marking as handled, delete the images from storage first
+        if (newStatus === 'afgehandeld' && req?.images?.length > 0) {
+            await deleteRequestImages(req.images);
         }
 
-        // If for some reason reverting to 'nieuw' is ever allowed/used (currently not exposed in UI if deleted)
         let updateData: any = { status: newStatus };
+        // When marking as handled, also clear image data and extra fields from the database
+        if (newStatus === 'afgehandeld') {
+            updateData = {
+                ...updateData,
+                images: [],
+                bouwjaar: '',
+                kilometerstand: '',
+                vin: '',
+                damage_notes: '',
+                extra_message: '',
+            };
+        }
+
         const { error } = await supabase
             .from('sell_requests')
             .update(updateData)
@@ -183,30 +217,25 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
             if (selectedRequest?.id === id) {
                 setSelectedRequest({ ...selectedRequest, ...updateData });
             }
+        } else {
+            console.error('Failed to update request status', error);
+            alert('Fout bij het bijwerken van de status.');
         }
     };
 
     const deleteRequest = async (id: string) => {
-        // Find the request to get image URLs
         const req = sellRequests.find(r => r.id === id);
 
-        // Delete records from database
+        // Delete images from storage first
+        if (req?.images?.length > 0) {
+            await deleteRequestImages(req.images);
+        }
+
+        // Then delete the record from the database
         const { error } = await supabase.from('sell_requests').delete().eq('id', id);
         if (!error) {
             setSellRequests(prev => prev.filter(r => r.id !== id));
             setSelectedRequest(null);
-
-            if (req && req.images && req.images.length > 0) {
-                try {
-                    const pathsToDelete = req.images.map((url: string) => {
-                        const parts = url.split('/');
-                        return 'sell_requests/' + parts[parts.length - 1]; // reconstruct path
-                    });
-                    await supabase.storage.from('customer_uploads').remove(pathsToDelete);
-                } catch (e) {
-                    console.error("Failed to delete images from storage", e);
-                }
-            }
         }
     };
 
@@ -610,46 +639,44 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                                     <Mail size={20} className="md:w-4 md:h-4 shrink-0" />
                                     <span className="block md:inline text-[9px] md:text-xs text-center leading-tight mt-0.5 md:mt-0 w-full whitespace-nowrap">VERKOOP AANVRAGEN</span>
                                 </div>
-                                {/* Unread badge */}
-                                {sellRequests.filter(r => r.status === 'nieuw').length > 0 && (
-                                    <span className="absolute md:relative -top-0.5 right-1 md:top-auto md:right-auto bg-red-500 text-white text-[8px] md:text-[9px] w-[16px] h-[16px] md:w-auto md:h-auto md:px-1.5 md:py-0.5 rounded-full md:rounded-sm shrink-0 flex items-center justify-center">
-                                        {sellRequests.filter(r => r.status === 'nieuw').length} <span className="hidden xl:inline ml-1">NIEUW</span>
-                                    </span>
-                                )}
+                                {/* Redundant old badge removed */}
                             </button>
 
-                            {/* Desktop Sub-menu List */}
+                            {/* Nieuwe Aanvragen Indicator Onder de Knop (Desktop) */}
                             <div className="hidden md:block">
                                 <AnimatePresence>
-                                    {activeTab === 'requests' && (
+                                    {sellRequests.filter(r => r.status === 'nieuw').length > 0 && (
                                         <motion.div
                                             initial={{ height: 0, opacity: 0 }}
                                             animate={{ height: 'auto', opacity: 1 }}
                                             exit={{ height: 0, opacity: 0 }}
-                                            className="flex flex-col overflow-y-auto custom-scrollbar max-h-[50vh] ml-4 border-l border-white/10"
+                                            className="flex flex-col overflow-y-auto custom-scrollbar max-h-[40vh] border-l-2 border-transparent"
                                         >
-                                            {isLoadingRequests ? (
-                                                <div className="p-4 flex justify-center"><Loader2 size={16} className="text-gray-500 animate-spin" /></div>
-                                            ) : sellRequests.length === 0 ? (
-                                                <div className="p-4 text-[10px] text-gray-500 uppercase tracking-widest">Geen aanvragen</div>
-                                            ) : (
-                                                sellRequests.map(req => (
-                                                    <button
-                                                        key={req.id}
-                                                        onClick={() => setSelectedRequest(req)}
-                                                        className={`text-left p-3 hover:bg-white/10 transition-colors border-l-2 ${selectedRequest?.id === req.id ? 'bg-white/5 border-white text-white' : 'border-transparent text-gray-400'}`}
-                                                    >
-                                                        <div className="flex justify-between items-start mb-1 gap-2">
-                                                            <h3 className={`font-bold text-xs font-sans truncate ${req.status === 'nieuw' ? 'text-blue-400' : ''}`}>{req.merk} {req.model}</h3>
-                                                            {req.status === 'nieuw' && <span className="bg-blue-600 text-[8px] text-white px-1 py-0.5 uppercase tracking-widest font-bold shrink-0 rounded-sm">Nieuw</span>}
-                                                        </div>
-                                                        <div className="flex justify-between items-center group-hover:text-gray-300 transition-colors">
-                                                            <p className="text-[10px] truncate max-w-[100px]">{req.naam}</p>
-                                                            <p className="text-[9px] uppercase tracking-wider">{new Date(req.created_at).toLocaleDateString('nl-BE')}</p>
-                                                        </div>
-                                                    </button>
-                                                ))
-                                            )}
+                                            <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-3 py-2 text-center shadow-[0_0_15px_rgba(239,68,68,0.1)] mb-2 mt-2">
+                                                <span className="text-[10px] uppercase tracking-widest font-bold flex items-center justify-center gap-2">
+                                                    <span className="relative flex h-2 w-2">
+                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                                    </span>
+                                                    {sellRequests.filter(r => r.status === 'nieuw').length} Nieuwe {sellRequests.filter(r => r.status === 'nieuw').length === 1 ? 'Aanvraag' : 'Aanvragen'}
+                                                </span>
+                                            </div>
+
+                                            {sellRequests.filter(r => r.status === 'nieuw').map(req => (
+                                                <button
+                                                    key={req.id}
+                                                    onClick={() => { setActiveTab('requests'); setSelectedRequest(req); }}
+                                                    className={`text-left p-3 hover:bg-white/10 transition-colors border-l-2 ml-4 ${selectedRequest?.id === req.id ? 'bg-white/5 border-red-500 text-white' : 'border-transparent text-gray-400 hover:border-red-500/50'}`}
+                                                >
+                                                    <div className="flex justify-between items-start mb-1 gap-2">
+                                                        <h3 className="font-bold text-xs font-sans truncate text-white">{req.merk} {req.model}</h3>
+                                                    </div>
+                                                    <div className="flex justify-between items-center group-hover:text-gray-300 transition-colors">
+                                                        <p className="text-[10px] truncate max-w-[100px]">{req.naam}</p>
+                                                        <p className="text-[9px] uppercase tracking-wider">{new Date(req.created_at).toLocaleDateString('nl-BE')}</p>
+                                                    </div>
+                                                </button>
+                                            ))}
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
@@ -1146,169 +1173,259 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                className="flex flex-col md:flex-row gap-8"
+                                className="w-full h-full flex flex-col"
                             >
-                                {/* LEFT: LIST OF REQUESTS (MOBILE ONLY) */}
-                                <div className={`${selectedRequest ? 'hidden' : 'flex'} md:hidden w-full flex-col bg-[#0A0A0A] border border-white/5`}>
-                                    <div className="p-6 border-b border-white/5 bg-[#0A0A0A] z-10">
-                                        <h2 className="text-base font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2">
-                                            <Mail size={18} /> Verkoop Aanvragen
-                                        </h2>
-                                    </div>
-
-                                    {isLoadingRequests ? (
-                                        <div className="flex-grow flex items-center justify-center p-8">
-                                            <Loader2 size={24} className="text-gray-500 animate-spin" />
-                                        </div>
-                                    ) : sellRequests.length === 0 ? (
-                                        <div className="flex-grow flex items-center justify-center p-8">
-                                            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest text-center">Nog geen aanvragen ontvangen.</p>
-                                        </div>
-                                    ) : (
-                                        <div className="flex-col divide-y divide-white/5">
-                                            {sellRequests.map(req => (
-                                                <div
-                                                    key={req.id}
-                                                    onClick={() => setSelectedRequest(req)}
-                                                    className={`p-3 md:p-4 cursor-pointer hover:bg-white/5 transition-colors border-l-2 ${selectedRequest?.id === req.id ? 'bg-white/5 border-white' : 'border-transparent'} ${req.status === 'nieuw' ? 'border-l-blue-500 bg-blue-500/5' : ''}`}
-                                                >
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <h3 className="font-bold text-sm text-white font-sans">{req.merk} {req.model}</h3>
-                                                        {req.status === 'nieuw' && <span className="bg-blue-500 text-xs text-white px-1.5 py-0.5 uppercase tracking-widest font-bold ml-2 shrink-0">Nieuw</span>}
-                                                    </div>
-                                                    <div className="flex justify-between items-center mt-2 group">
-                                                        <p className="text-xs text-gray-500 truncate max-w-[150px]">{req.naam}</p>
-                                                        <p className="text-xs text-gray-600 uppercase tracking-wider">{new Date(req.created_at).toLocaleDateString('nl-BE')}</p>
-                                                    </div>
+                                {!selectedRequest ? (
+                                    /* MASTER VIEW (LIST) */
+                                    <div className="w-full flex-grow flex flex-col bg-[#0A0A0A] border border-white/5 overflow-hidden">
+                                        <div className="p-4 md:p-6 border-b border-white/5 bg-[#050505] z-10 shrink-0 space-y-4">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <h2 className="text-base md:text-lg font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2">
+                                                        <Mail size={20} /> Verkoop Aanvragen
+                                                    </h2>
+                                                    {sellRequests.filter(r => r.status === 'nieuw').length > 0 && (
+                                                        <p className="text-xs text-blue-400 uppercase tracking-widest font-bold mt-2">
+                                                            {sellRequests.filter(r => r.status === 'nieuw').length} Nieuwe {sellRequests.filter(r => r.status === 'nieuw').length === 1 ? 'aanvraag' : 'aanvragen'}
+                                                        </p>
+                                                    )}
                                                 </div>
-                                            ))}
+                                                <span className="text-[10px] text-gray-500 uppercase tracking-widest hidden md:inline">{sellRequests.length} Totaal</span>
+                                            </div>
+                                            <div className="flex gap-2 bg-[#0A0A0A] p-1 border border-white/5 w-full md:w-max">
+                                                <button onClick={() => setRequestFilter('all')} className={`flex-1 md:flex-none px-4 py-2 text-[10px] md:text-xs font-bold uppercase tracking-widest transition-colors ${requestFilter === 'all' ? 'bg-white text-black' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>Alle ({sellRequests.length})</button>
+                                                <button onClick={() => setRequestFilter('nieuw')} className={`flex-1 md:flex-none px-4 py-2 text-[10px] md:text-xs font-bold uppercase tracking-widest transition-colors ${requestFilter === 'nieuw' ? 'bg-blue-500 text-black' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>Nieuw ({sellRequests.filter(r => r.status === 'nieuw').length})</button>
+                                                <button onClick={() => setRequestFilter('afgehandeld')} className={`flex-1 md:flex-none px-4 py-2 text-[10px] md:text-xs font-bold uppercase tracking-widest transition-colors ${requestFilter === 'afgehandeld' ? 'bg-gray-700 text-white' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>Afgehandeld ({sellRequests.filter(r => r.status === 'afgehandeld').length})</button>
+                                            </div>
                                         </div>
-                                    )}
-                                </div>
 
-                                {/* RIGHT: REQUEST DETAIL */}
-                                {selectedRequest ? (
-                                    <div className="w-full flex flex-col bg-[#0A0A0A] border border-white/5 overflow-y-auto custom-scrollbar">
-                                        <div className="px-2 py-3 md:p-6 border-b border-white/5 sticky top-0 bg-[#050505] z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                            <div className="flex items-center gap-4">
-                                                <button onClick={() => setSelectedRequest(null)} className="md:hidden p-2 bg-white/5 hover:bg-white/10 rounded-sm shrink-0">
-                                                    <ChevronLeft size={16} className="text-white" />
-                                                </button>
-                                                <div className="min-w-0">
-                                                    <h2 className="text-base md:text-lg font-bold text-white uppercase tracking-wider truncate">Aanvraag Details</h2>
-                                                    <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mt-1 truncate">Ingediend op: {new Date(selectedRequest.created_at).toLocaleString('nl-BE')}</p>
+                                        {isLoadingRequests ? (
+                                            <div className="flex-grow flex items-center justify-center p-8">
+                                                <Loader2 size={32} className="text-gray-500 animate-spin" />
+                                            </div>
+                                        ) : sellRequests.length === 0 ? (
+                                            <div className="flex-grow flex items-center justify-center p-8">
+                                                <div className="text-center">
+                                                    <Mail size={48} className="text-white/10 mx-auto mb-4" />
+                                                    <p className="text-gray-500 text-sm font-bold uppercase tracking-widest">Nog geen aanvragen ontvangen.</p>
                                                 </div>
                                             </div>
-                                            <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                                        ) : (
+                                            <div className="flex-grow overflow-y-auto custom-scrollbar">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-4 md:p-6">
+                                                    {sellRequests.filter(req => requestFilter === 'all' || req.status === requestFilter).map(req => (
+                                                        <div
+                                                            key={req.id}
+                                                            onClick={() => setSelectedRequest(req)}
+                                                            className={`p-6 cursor-pointer border transition-all duration-300 group ${req.status === 'nieuw'
+                                                                ? 'bg-[#0F0F0F] hover:bg-[#1A1A1A] border-blue-500/30 hover:border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.05)]'
+                                                                : 'bg-[#050505] hover:bg-[#111] border-white/5 hover:border-white/20'}`}
+                                                        >
+                                                            <div className="flex justify-between items-start mb-4">
+                                                                <div>
+                                                                    <span className="text-[10px] text-gray-500 uppercase tracking-widest block mb-1">Voertuig</span>
+                                                                    <h3 className="font-bold text-lg text-white font-sans leading-tight">{req.merk} {req.model}</h3>
+                                                                </div>
+                                                                {req.status === 'nieuw' ? (
+                                                                    <span className="bg-blue-500 text-[10px] text-black px-2 py-1 uppercase tracking-widest font-bold shrink-0">Nieuw</span>
+                                                                ) : (
+                                                                    <span className="bg-gray-800 text-[10px] text-gray-400 px-2 py-1 uppercase tracking-widest font-bold shrink-0 flex items-center gap-1"><CheckCircle size={10} /> Afgehandeld</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="space-y-2 mt-4 pt-4 border-t border-white/5">
+                                                                <p className="text-sm text-gray-400 font-sans flex items-center gap-2"><User size={14} className="text-gray-600" /> {req.naam}</p>
+                                                                <p className="text-sm text-gray-400 font-sans flex items-center gap-2"><Calendar size={14} className="text-gray-600" /> {new Date(req.created_at).toLocaleDateString('nl-BE')}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    /* RIGHT: REQUEST DETAIL */
+                                    <div className="w-full flex-grow flex flex-col bg-[#0A0A0A] border border-white/5 animate-in fade-in slide-in-from-right-4 duration-300">
+
+                                        {/* DETAIL HEADER */}
+                                        <div className="px-4 py-4 md:px-8 md:py-6 border-b border-white/5 bg-[#050505] sticky top-0 z-20 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                            <div className="flex items-center gap-4">
+                                                <button onClick={() => setSelectedRequest(null)} className="md:hidden p-3 bg-white/5 hover:bg-white/10 rounded-sm shrink-0 border border-white/10 transition-colors">
+                                                    <ChevronLeft size={18} className="text-white" />
+                                                </button>
+                                                <div className="min-w-0">
+                                                    <h2 className="text-lg md:text-2xl font-bold text-white uppercase tracking-wider truncate">Aanvraag Dossier</h2>
+                                                    <p className="text-xs text-gray-500 uppercase tracking-widest mt-1 truncate">Ingediend op: {new Date(selectedRequest.created_at).toLocaleString('nl-BE')} &bull; {selectedRequest.status === 'nieuw' ? <span className="text-blue-400 font-bold">Nieuwe Aanvraag</span> : <span className="text-gray-400">Afgehandeld</span>}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-wrap gap-3 w-full md:w-auto">
                                                 <button
                                                     onClick={() => handleAfgehandeldClick(selectedRequest.id, selectedRequest.status)}
-                                                    className={`flex-1 md:flex-none justify-center px-4 py-2 text-xs font-bold uppercase tracking-widest transition-colors flex items-center gap-2 ${selectedRequest.status === 'afgehandeld' ? 'bg-gray-800 text-gray-400 hover:bg-gray-700' : 'bg-green-500 text-black hover:bg-green-400'}`}
+                                                    className={`flex-1 md:flex-none justify-center px-6 py-3 text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 ${selectedRequest.status === 'afgehandeld' ? 'bg-[#050505] text-gray-400 hover:text-white border border-white/10 hover:border-white/30' : 'bg-green-500 text-black hover:bg-green-400 border border-green-500'}`}
                                                 >
-                                                    {selectedRequest.status === 'afgehandeld' ? <><Clock size={14} /> Markeer Nieuw</> : <><CheckCircle size={14} /> Afgehandeld</>}
+                                                    {selectedRequest.status === 'afgehandeld' ? <><Clock size={16} /> Markeer als Nieuw</> : <><CheckCircle size={16} /> Markeer Afgehandeld</>}
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteClick(selectedRequest.id)}
-                                                    className="flex-1 md:flex-none justify-center px-4 py-2 bg-red-900/20 text-red-500 hover:bg-red-900/40 text-[10px] md:text-xs font-bold uppercase tracking-widest transition-colors border border-red-900/30 flex items-center gap-2"
+                                                    className="flex-1 md:flex-none justify-center px-6 py-3 bg-red-900/10 text-red-500 hover:bg-red-900/40 hover:text-red-400 text-xs font-bold uppercase tracking-widest transition-all border border-red-900/30 flex items-center gap-2"
                                                 >
-                                                    <Trash2 size={14} /> Verwijder
+                                                    <Trash2 size={16} /> Verwijder Dossier
                                                 </button>
                                             </div>
                                         </div>
 
-                                        <div className="px-2 py-4 md:p-8 space-y-8 flex-grow">
-                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                                <div className="space-y-6">
-                                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-white/10 pb-2">Klantgegevens</h3>
-                                                    <div className="flex flex-col gap-4">
-                                                        <div>
-                                                            <p className="text-xs text-gray-600 uppercase tracking-widest">Naam</p>
-                                                            <p className="text-sm text-white font-sans mt-1">{selectedRequest.naam}</p>
+                                        {/* DETAIL CONTENT */}
+                                        <div className="p-4 md:p-8 space-y-8 md:space-y-12 overflow-y-auto custom-scrollbar">
+
+                                            {/* Data Grids */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+
+                                                {/* Voertuig Card */}
+                                                <div className="bg-[#050505] border border-white/5 p-6 md:p-8 space-y-6">
+                                                    <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+                                                        <CarIcon size={20} className="text-gray-400" />
+                                                        <h3 className="text-sm font-bold text-white uppercase tracking-widest">Voertuiggegevens</h3>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-6">
+                                                        <div className="col-span-2">
+                                                            <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Merk & Model</p>
+                                                            <p className="text-2xl text-white font-sans font-bold leading-tight">{selectedRequest.merk} <span className="text-gray-300 font-normal">{selectedRequest.model}</span></p>
                                                         </div>
-                                                        <div>
-                                                            <p className="text-xs text-gray-600 uppercase tracking-widest">Telefoon</p>
-                                                            <a href={`tel:${selectedRequest.tel}`} className="w-full flex items-start sm:items-center justify-between flex-wrap gap-2 p-3 mt-1 bg-gradient-to-r from-green-900/40 to-transparent border border-green-500/30 rounded-sm hover:from-green-900/60 transition-colors group">
-                                                                <div className="flex items-center gap-3">
-                                                                    <Smartphone size={16} className="text-green-500 shrink-0" />
-                                                                    <span className="text-sm text-white font-sans font-bold tracking-wider">{selectedRequest.tel}</span>
-                                                                </div>
-                                                                <span className="text-[10px] font-bold uppercase tracking-widest bg-green-500 text-black px-2 py-1 rounded-sm shrink-0 group-hover:bg-green-400 transition-colors ml-auto sm:ml-0 mt-2 sm:mt-0">Bel Nu</span>
-                                                            </a>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-xs text-gray-600 uppercase tracking-widest">Email</p>
-                                                            <a href={`mailto:${selectedRequest.email}`} className="w-full flex items-start sm:items-center justify-between flex-wrap gap-2 p-3 mt-1 bg-gradient-to-r from-blue-900/40 to-transparent border border-blue-500/30 rounded-sm hover:from-blue-900/60 transition-colors group">
-                                                                <div className="flex items-center gap-3 break-all flex-1 min-w-0 pr-4">
-                                                                    <Mail size={16} className="text-blue-500 shrink-0" />
-                                                                    <span className="text-sm text-white font-sans font-bold tracking-wider break-words w-full">{selectedRequest.email}</span>
-                                                                </div>
-                                                                <span className="text-[10px] font-bold uppercase tracking-widest bg-blue-500 text-black px-2 py-1 rounded-sm shrink-0 group-hover:bg-blue-400 transition-colors self-end mt-2 sm:mt-0">Mail Nu</span>
-                                                            </a>
-                                                        </div>
+                                                        {selectedRequest.bouwjaar && (
+                                                            <div>
+                                                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Bouwjaar</p>
+                                                                <p className="text-lg text-white font-sans">{selectedRequest.bouwjaar}</p>
+                                                            </div>
+                                                        )}
+                                                        {selectedRequest.kilometerstand && (
+                                                            <div>
+                                                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Kilometerstand</p>
+                                                                <p className="text-lg text-white font-sans"><FormatMixed text={`${selectedRequest.kilometerstand}`} /> <span className="text-sm text-gray-500">km</span></p>
+                                                            </div>
+                                                        )}
+                                                        {selectedRequest.vin && (
+                                                            <div className="col-span-2">
+                                                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Chassisnummer (VIN)</p>
+                                                                <p className="text-base text-gray-300 font-sans font-mono bg-[#0A0A0A] p-3 border border-white/5 break-all rounded-sm">{selectedRequest.vin}</p>
+                                                            </div>
+                                                        )}
+                                                        {selectedRequest.status === 'afgehandeld' && !selectedRequest.vin && !selectedRequest.kilometerstand && !selectedRequest.bouwjaar && (
+                                                            <div className="col-span-2">
+                                                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Extra Informatie</p>
+                                                                <p className="text-sm text-gray-400 font-sans italic">Voertuigdetails zijn verwijderd na afhandeling.</p>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
 
-                                                <div className="space-y-6">
-                                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-white/10 pb-2">Voertuiggegevens</h3>
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {/* Klant Card */}
+                                                <div className="bg-[#050505] border border-white/5 p-6 md:p-8 space-y-6">
+                                                    <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+                                                        <User size={20} className="text-gray-400" />
+                                                        <h3 className="text-sm font-bold text-white uppercase tracking-widest">Klantgegevens</h3>
+                                                    </div>
+
+                                                    <div className="space-y-6">
                                                         <div>
-                                                            <p className="text-xs text-gray-600 uppercase tracking-widest">Merk & Model</p>
-                                                            <p className="text-sm text-white font-sans mt-1">{selectedRequest.merk} {selectedRequest.model}</p>
+                                                            <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Naam</p>
+                                                            <p className="text-xl text-white font-sans font-bold">{selectedRequest.naam}</p>
                                                         </div>
-                                                        <div>
-                                                            <p className="text-xs text-gray-600 uppercase tracking-widest">Bouwjaar / KM-stand</p>
-                                                            <p className="text-sm text-white font-sans mt-1">
-                                                                {selectedRequest.bouwjaar || '?'} / <FormatMixed text={`€${selectedRequest.kilometerstand || '?'}`} /> km
-                                                            </p>
-                                                        </div>
-                                                        <div className="col-span-1 md:col-span-2">
-                                                            <p className="text-xs text-gray-600 uppercase tracking-widest">Chassisnummer (VIN)</p>
-                                                            <p className="text-sm text-white font-sans mt-1 break-all bg-white/5 px-2 py-1 inline-block rounded-sm border border-white/5">{selectedRequest.vin || 'Niet opgegeven'}</p>
-                                                        </div>
-                                                        <div className="col-span-1 md:col-span-2">
-                                                            <p className="text-xs text-gray-600 uppercase tracking-widest">Extra Bericht & Schade</p>
-                                                            <div className="mt-1 space-y-2">
-                                                                {selectedRequest.extra_message && (
-                                                                    <p className="text-sm text-white font-sans break-words whitespace-pre-wrap"><span className="text-gray-500 text-xs uppercase tracking-wider block mb-1">Bericht:</span>{selectedRequest.extra_message}</p>
-                                                                )}
-                                                                <p className="text-sm text-gray-300 font-sans italic break-words whitespace-pre-wrap"><span className="text-gray-500 text-xs uppercase tracking-wider block mb-1">Schade:</span>{selectedRequest.damage_notes || 'Geen schade opmerkingen'}</p>
-                                                            </div>
+
+                                                        {/* Action Buttons for Contact */}
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                            <a href={`tel:${selectedRequest.tel}`} className="flex flex-col gap-2 p-4 bg-gradient-to-br from-[#0A0A0A] to-[#111] border border-white/5 hover:border-green-500/50 hover:bg-green-500/5 transition-all group relative">
+                                                                <div className="flex items-center justify-between w-full mb-1">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Smartphone size={16} className="text-green-500" />
+                                                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest">Telefoon</p>
+                                                                    </div>
+                                                                    <span className="bg-green-500/10 text-green-500 border border-green-500/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest group-hover:bg-green-500 group-hover:text-black transition-colors">Bel Nu</span>
+                                                                </div>
+                                                                <p className="text-base text-white font-sans font-bold group-hover:text-green-400 transition-colors">{selectedRequest.tel}</p>
+                                                            </a>
+
+                                                            <a href={`mailto:${selectedRequest.email}`} className="flex flex-col gap-2 p-4 bg-gradient-to-br from-[#0A0A0A] to-[#111] border border-white/5 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all group overflow-hidden relative">
+                                                                <div className="flex items-center justify-between w-full mb-1">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Mail size={16} className="text-blue-500" />
+                                                                        <p className="text-[10px] text-gray-500 uppercase tracking-widest">Email</p>
+                                                                    </div>
+                                                                    <span className="bg-blue-500/10 text-blue-500 border border-blue-500/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest group-hover:bg-blue-500 group-hover:text-black transition-colors shrink-0 ml-2">Mail Nu</span>
+                                                                </div>
+                                                                <p className="text-xs sm:text-sm md:text-base text-white font-sans font-bold break-all group-hover:text-blue-400 transition-colors" title={selectedRequest.email}>{selectedRequest.email}</p>
+                                                            </a>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-4 pt-6 border-t border-white/5">
-                                                <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Geüploade Foto's ({selectedRequest.images?.length || 0})</h3>
-                                                </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                    {selectedRequest.images && selectedRequest.images.length > 0 ? (
-                                                        selectedRequest.images.map((img: string, i: number) => (
-                                                            <div key={i} className="group relative border border-white/10 bg-[#050505] p-2 aspect-[4/3]">
-                                                                <img src={img} className="w-full h-full object-cover" alt={`Upload ${i}`} />
-                                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    <button
-                                                                        onClick={() => handleDownloadImage(img, `VerkoopAanvraag_${selectedRequest.merk}_${selectedRequest.model}_Foto${i + 1}.jpg`)}
-                                                                        className="bg-white text-black px-4 py-2 text-xs font-bold uppercase tracking-widest flex items-center gap-2 hover:bg-gray-200 transition-colors"
-                                                                    >
-                                                                        <Download size={14} /> Download
-                                                                    </button>
+                                            {/* Extra Info & Schade Card */}
+                                            {(selectedRequest.extra_message || selectedRequest.damage_notes) && (
+                                                <div className="bg-[#050505] border border-white/5 p-6 md:p-8 space-y-6">
+                                                    <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+                                                        <FileText size={20} className="text-gray-400" />
+                                                        <h3 className="text-sm font-bold text-white uppercase tracking-widest">Notities & Schade</h3>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                        {selectedRequest.extra_message && (
+                                                            <div>
+                                                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-3">Extra Bericht van klant</p>
+                                                                <div className="p-4 md:p-6 bg-[#0A0A0A] border border-white/5 rounded-sm">
+                                                                    <p className="text-sm md:text-base text-gray-300 font-sans leading-relaxed whitespace-pre-wrap">{selectedRequest.extra_message}</p>
                                                                 </div>
                                                             </div>
-                                                        ))
+                                                        )}
+                                                        {selectedRequest.damage_notes && (
+                                                            <div>
+                                                                <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-3 text-red-400/80">Opgegeven schade / Gebreken</p>
+                                                                <div className="p-4 md:p-6 bg-red-900/5 border border-red-500/20 rounded-sm">
+                                                                    <p className="text-sm md:text-base text-gray-300 font-sans leading-relaxed whitespace-pre-wrap italic">{selectedRequest.damage_notes}</p>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Foto Galerij - Show if there are images, or if it's a new request with empty images array */}
+                                            {(selectedRequest.images?.length > 0 || selectedRequest.status === 'nieuw') && (
+                                                <div className="space-y-6 pt-4">
+                                                    <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                                                        <h3 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                                                            <ImageIcon size={18} /> Geüploade Foto's ({selectedRequest.images?.length || 0})
+                                                        </h3>
+                                                    </div>
+
+                                                    {selectedRequest.images && selectedRequest.images.length > 0 ? (
+                                                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                                                            {selectedRequest.images.map((img: string, i: number) => (
+                                                                <div key={i} className="group relative border border-white/10 bg-[#050505] p-2 aspect-[4/3] rounded-sm shadow-xl overflow-hidden">
+                                                                    <img src={img} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt={`Upload ${i}`} />
+                                                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                                                        <button
+                                                                            onClick={() => handleDownloadImage(img, `VerkoopAanvraag_${selectedRequest.merk}_${selectedRequest.model}_Foto${i + 1}.jpg`)}
+                                                                            className="bg-white text-black px-4 py-3 text-xs font-bold uppercase tracking-widest flex items-center gap-2 hover:bg-gray-200 transition-colors shadow-2xl scale-95 group-hover:scale-100 transform duration-300"
+                                                                        >
+                                                                            <Download size={14} /> Foto Opslaan
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     ) : (
-                                                        <p className="text-gray-600 text-xs italic font-sans col-span-full">Geen foto's toegevoegd bij deze aanvraag.</p>
+                                                        <div className="bg-[#050505] border border-white/5 p-8 flex flex-col items-center justify-center text-center">
+                                                            <ImageIcon size={32} className="text-white/10 mb-3" />
+                                                            <p className="text-gray-500 text-xs uppercase tracking-widest font-bold">Geen foto's toegevoegd bij deze aanvraag.</p>
+                                                        </div>
                                                     )}
                                                 </div>
-                                            </div>
+                                            )}
+
+                                            {/* Extra bottom padding to ensure scrolling clears the fixed elements if any */}
+                                            <div className="h-12 w-full"></div>
+
                                         </div>
-                                    </div>
-                                ) : (
-                                    <div className="hidden md:flex flex-grow flex-col items-center justify-center border border-white/5 bg-[#050505]/50 overflow-y-auto">
-                                        <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                                            <Mail size={24} className="text-gray-500" />
-                                        </div>
-                                        <p className="text-gray-500 uppercase tracking-widest text-xs font-bold">Selecteer een aanvraag om de details te bekijken</p>
                                     </div>
                                 )}
                             </motion.div>
@@ -1458,7 +1575,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onClose }) => {
                     </AnimatePresence>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 
